@@ -735,6 +735,15 @@ const SENTENCES = {
   },
 };
 
+/* ==========================================================
+   SCORING CONFIG PER DIFFICULTY
+   ========================================================== */
+const SCORING = {
+  beginner:     { max: 5,  deduct: 2,  min: 1,  unit: "כוכבים" },
+  intermediate: { max: 20, deduct: 6,  min: 8,  unit: "נקודות" },
+  advanced:     { max: 50, deduct: 15, min: 20, unit: "נקודות" },
+};
+
 const TOPIC_NAMES = {
   animals:"🐾 חיות", food:"🍕 אוכל", school:"🎒 בית ספר", sports:"⚽ ספורט",
   family:"👨‍👩‍👧 משפחה", colors:"🎨 צבעים", weather:"🌤️ מזג אוויר", travel:"✈️ נסיעות",
@@ -749,7 +758,7 @@ let state = {
   difficulty: "beginner",
   topic: "animals",
   currentSentence: null,
-  currentStars: 5,
+  currentPoints: 5,
   hintUsed: false,
   attemptCount: 0,
   hintIndex: 0,
@@ -787,6 +796,7 @@ function init() {
       document.querySelectorAll(".pill").forEach(p => p.classList.remove("selected"));
       pill.classList.add("selected");
       state.difficulty = pill.dataset.level;
+      updateTotalStarsDisplay();
       saveData();
     })
   );
@@ -871,7 +881,7 @@ function createSentence() {
   hideSettingsError();
 
   state.currentSentence  = sentence;
-  state.currentStars     = 5;
+  state.currentPoints    = SCORING[state.difficulty].max;
   state.hintUsed         = false;
   state.attemptCount     = 0;
   state.hintIndex        = 0;
@@ -927,7 +937,7 @@ function createSentence() {
     ? "לחץ ותרגם לאנגלית בקול"
     : "לחץ ותרגם לעברית בקול";
 
-  updateStarsUI();
+  updateScoreUI();
   updateAttemptInfo();
   showScreen("screen-practice");
 }
@@ -935,28 +945,54 @@ function createSentence() {
 /* ==========================================================
    STARS
    ========================================================== */
-function updateStarsUI() {
+function updateScoreUI() {
+  const cfg = SCORING[state.difficulty];
   const c = document.getElementById("sentence-stars");
   c.innerHTML = "";
-  for (let i = 0; i < 5; i++) {
-    const s = document.createElement("span");
-    s.className = "star " + (i < state.currentStars ? "filled" : "empty");
-    s.textContent = i < state.currentStars ? "⭐" : "☆";
-    c.appendChild(s);
+
+  if (state.difficulty === "beginner") {
+    // כוכבים גרפיים
+    for (let i = 0; i < cfg.max; i++) {
+      const s = document.createElement("span");
+      s.className = "star " + (i < state.currentPoints ? "filled" : "empty");
+      s.textContent = i < state.currentPoints ? "⭐" : "☆";
+      c.appendChild(s);
+    }
+  } else {
+    // תצוגת נקודות מספרית
+    const badge = document.createElement("div");
+    badge.style.cssText = `
+      font-size:2rem; font-weight:900; letter-spacing:0.02em;
+      background:linear-gradient(90deg,#FCD34D,#F97316);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+    `;
+    badge.textContent = state.currentPoints;
+    const label = document.createElement("div");
+    label.style.cssText = "font-size:0.78rem;color:var(--text-muted);margin-top:2px;";
+    label.textContent = cfg.unit;
+    c.appendChild(badge);
+    c.appendChild(label);
   }
 }
-function setStars(n, animate=false) {
-  const old = state.currentStars;
-  state.currentStars = Math.max(1, Math.min(5, n));
-  updateStarsUI();
-  if (animate && state.currentStars < old) {
+
+function deductPoints(animate=false) {
+  const cfg = SCORING[state.difficulty];
+  state.currentPoints = Math.max(cfg.min, state.currentPoints - cfg.deduct);
+  updateScoreUI();
+  if (animate) {
     document.querySelectorAll("#sentence-stars .star").forEach(s => {
       s.classList.add("bounce"); setTimeout(()=>s.classList.remove("bounce"), 400);
     });
+    // flash the score badge for non-beginner
+    const badge = document.querySelector("#sentence-stars div");
+    if (badge) { badge.style.opacity="0.3"; setTimeout(()=>badge.style.opacity="1",300); }
   }
 }
 function updateTotalStarsDisplay() {
   document.getElementById("total-stars-num").textContent = state.totalStars;
+  const cfg = SCORING[state.difficulty];
+  document.querySelector(".stars-total .star-label").textContent = cfg ? cfg.unit : "נקודות";
 }
 
 /* ==========================================================
@@ -966,7 +1002,7 @@ function showHint() {
   if (state.sentenceDone) return;
   if (!state.hintUsed) {
     state.hintUsed = true;
-    setStars(state.currentStars - 2, true);
+    deductPoints(true);
     const btn = document.getElementById("btn-hint");
     btn.classList.add("hint-used");
     btn.textContent = "💡 רמז נוסף";
@@ -1014,7 +1050,7 @@ function startListening() {
   if (!SR) { showFeedbackError("הדפדפן לא תומך בזיהוי דיבור"); return; }
 
   state.attemptCount++;
-  if (state.attemptCount > 2) setStars(state.currentStars - 2, true);
+  if (state.attemptCount > 2) deductPoints(true);
   updateAttemptInfo();
 
   state.recognition = new SR();
@@ -1142,7 +1178,7 @@ function evaluateSpeech(transcript) {
 
   if (sim >= 0.75) {
     state.sentenceDone = true;
-    state.totalStars += state.currentStars;
+    state.totalStars += state.currentPoints;
     saveData();
     updateTotalStarsDisplay();
 
@@ -1156,11 +1192,14 @@ function evaluateSpeech(transcript) {
     ];
     feedback.innerHTML = `${msgs[Math.floor(Math.random()*msgs.length)]}<br><small>דיוק: ${Math.round(sim*100)}%</small>`;
 
+    const cfg = SCORING[state.difficulty];
     const banner = document.getElementById("result-banner");
     banner.classList.add("visible");
     document.getElementById("result-title").textContent = sim >= 0.95 ? "מושלם! 🌟" : "כל הכבוד! 🎊";
-    document.getElementById("result-stars-display").textContent = "⭐".repeat(state.currentStars);
-    document.getElementById("result-msg").textContent = `קיבלת ${state.currentStars} כוכבים! סך הכל: ${state.totalStars} כוכבים.`;
+    document.getElementById("result-stars-display").textContent =
+      state.difficulty === "beginner" ? "⭐".repeat(state.currentPoints) : `+${state.currentPoints} ${cfg.unit}`;
+    document.getElementById("result-msg").textContent =
+      `קיבלת ${state.currentPoints} ${cfg.unit}! סך הכל: ${state.totalStars} ${cfg.unit}.`;
 
     const mic = document.getElementById("btn-mic");
     mic.textContent = "✅ הצלחת!";
