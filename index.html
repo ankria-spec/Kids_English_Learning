@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="only light">
 <title>מאמן דיבור ואנגלית</title>
 <style>
-  /* ===== TOKENS ===== */
   :root {
     --purple:       #7C3AED;
     --purple-light: #C4B5FD;
@@ -14,6 +14,8 @@
     --teal-light:   #99F6E4;
     --pink:         #EC4899;
     --pink-light:   #FBCFE8;
+    --orange:       #F97316;
+    --orange-light: #FED7AA;
     --bg:           #1A1232;
     --bg2:          #241848;
     --glass:        rgba(255,255,255,0.11);
@@ -26,9 +28,8 @@
     --font:         'Segoe UI', 'Arial', sans-serif;
   }
 
-  /* ===== RESET & BASE ===== */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { font-size: 16px; }
+  html { font-size: 16px; color-scheme: only light; }
   body {
     font-family: var(--font);
     background: var(--bg);
@@ -36,27 +37,20 @@
     min-height: 100vh;
     direction: rtl;
     overflow-x: hidden;
+    color-scheme: only light;
   }
 
-  /* Animated background blobs */
-  .bg-blobs {
-    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
-  }
-  .blob {
-    position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.28;
-    animation: blobFloat 12s ease-in-out infinite;
-  }
+  .bg-blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.28; animation: blobFloat 12s ease-in-out infinite; }
   .blob-1 { width: 480px; height: 480px; background: var(--purple); top: -100px; right: -100px; animation-delay: 0s; }
   .blob-2 { width: 360px; height: 360px; background: var(--teal); bottom: -80px; left: -80px; animation-delay: 4s; }
   .blob-3 { width: 300px; height: 300px; background: var(--pink); top: 40%; left: 30%; animation-delay: 8s; }
-
   @keyframes blobFloat {
     0%,100% { transform: translate(0,0) scale(1); }
     33% { transform: translate(30px,-30px) scale(1.05); }
     66% { transform: translate(-20px,20px) scale(0.97); }
   }
 
-  /* ===== LAYOUT ===== */
   #app {
     position: relative; z-index: 1;
     min-height: 100vh;
@@ -68,11 +62,9 @@
   .app-header {
     width: 100%; max-width: 640px;
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
-  .logo {
-    display: flex; align-items: center; gap: 10px;
-  }
+  .logo { display: flex; align-items: center; gap: 10px; }
   .logo-icon {
     width: 46px; height: 46px; border-radius: 14px;
     background: linear-gradient(135deg, var(--purple), var(--pink));
@@ -81,21 +73,16 @@
   }
   .logo-text {
     font-size: 1.15rem; font-weight: 700;
-    background: linear-gradient(90deg, #E9D5FF, #A5F3FC);
+    background: linear-gradient(90deg, #F0ABFC, #67E8F9);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.2;
+    background-clip: text; line-height: 1.2; filter: brightness(1.15);
   }
   .logo-sub { font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
 
-  /* Stars counter */
   .stars-total {
     display: flex; align-items: center; gap: 8px;
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 50px;
-    padding: 8px 16px;
-    backdrop-filter: blur(12px);
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 50px; padding: 8px 16px; backdrop-filter: blur(12px);
   }
   .stars-total .star-icon { font-size: 1.2rem; }
   .stars-total .star-count {
@@ -106,19 +93,53 @@
   }
   .stars-total .star-label { font-size: 0.72rem; color: var(--text-muted); }
 
-  /* ===== GLASS CARD ===== */
-  .card {
+  /* ===== MODE TABS ===== */
+  .mode-tabs {
     width: 100%; max-width: 640px;
-    background: var(--glass);
+    display: flex; gap: 8px;
+    background: rgba(255,255,255,0.06);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 28px 24px;
-    box-shadow: var(--shadow);
+    padding: 6px;
+    margin-bottom: 16px;
+  }
+  .mode-tab {
+    flex: 1; padding: 12px 8px;
+    border-radius: calc(var(--radius) - 4px);
+    border: none; background: transparent;
+    color: var(--text-muted); font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; transition: all .22s;
+    font-family: var(--font);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mode-tab .tab-icon { font-size: 1.4rem; }
+  .mode-tab .tab-label { font-size: 0.78rem; line-height: 1.2; text-align: center; }
+  .mode-tab:active { transform: scale(0.97); }
+
+  .mode-tab.active-en {
+    background: linear-gradient(135deg, rgba(13,148,136,0.35), rgba(153,246,228,0.15));
+    color: var(--teal-light);
+    box-shadow: 0 0 20px rgba(13,148,136,0.25);
+    border: 1px solid rgba(13,148,136,0.3);
+  }
+  .mode-tab.active-he {
+    background: linear-gradient(135deg, rgba(249,115,22,0.35), rgba(254,215,170,0.15));
+    color: var(--orange-light);
+    box-shadow: 0 0 20px rgba(249,115,22,0.25);
+    border: 1px solid rgba(249,115,22,0.3);
   }
 
-  /* ===== SCREEN TRANSITIONS ===== */
+  /* ===== CARD ===== */
+  .card {
+    width: 100%; max-width: 640px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    padding: 28px 24px; box-shadow: var(--shadow);
+  }
+
+  /* ===== SCREENS ===== */
   .screen { display: none; width: 100%; flex-direction: column; align-items: center; gap: 18px; }
   .screen.active { display: flex; animation: fadeUp 0.35s ease; }
   @keyframes fadeUp {
@@ -126,66 +147,45 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ===== SETTINGS SCREEN ===== */
   .screen-title {
     font-size: 1.55rem; font-weight: 800; text-align: center;
-    background: linear-gradient(120deg, #E9D5FF, #A5F3FC, #FBCFE8);
+    background: linear-gradient(120deg, #F0ABFC, #67E8F9, #F9A8D4);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.3; margin-bottom: 4px;
+    background-clip: text; line-height: 1.3; margin-bottom: 4px; filter: brightness(1.15);
   }
-  .screen-subtitle {
-    font-size: 0.9rem; color: var(--text-muted); text-align: center;
-  }
+  .screen-subtitle { font-size: 0.9rem; color: var(--text-muted); text-align: center; }
 
   .field-label {
     font-size: 0.82rem; font-weight: 700; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 0.08em;
-    margin-bottom: 6px; display: block;
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; display: block;
   }
   .field-group { width: 100%; display: flex; flex-direction: column; gap: 6px; }
 
-  /* Custom select */
   .custom-select {
     width: 100%; padding: 14px 16px;
-    background: rgba(255,255,255,0.06);
-    border: 1.5px solid var(--glass-border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-size: 1rem; font-family: var(--font);
-    cursor: pointer;
+    background: rgba(255,255,255,0.06); border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-size: 1rem; font-family: var(--font); cursor: pointer;
     appearance: none; -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%23A598C8' viewBox='0 0 16 16'%3E%3Cpath d='M8 10.5l-5-5h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: left 14px center;
+    background-repeat: no-repeat; background-position: left 14px center;
     transition: border-color .2s, background-color .2s;
   }
-  .custom-select:focus {
-    outline: none;
-    border-color: var(--purple-light);
-    background-color: rgba(124,58,237,0.12);
-  }
+  .custom-select:focus { outline: none; border-color: var(--purple-light); background-color: rgba(124,58,237,0.12); }
   .custom-select option { background: #1A1035; color: var(--text); }
 
-  /* Difficulty pills */
-  .pills {
-    display: flex; gap: 8px; width: 100%;
-  }
+  .pills { display: flex; gap: 8px; width: 100%; }
   .pill {
     flex: 1; padding: 12px 8px; text-align: center;
-    border-radius: var(--radius-sm);
-    border: 1.5px solid var(--glass-border);
-    background: rgba(255,255,255,0.04);
-    color: var(--text-muted); font-size: 0.9rem; font-weight: 600;
-    cursor: pointer; transition: all .2s;
-    user-select: none;
+    border-radius: var(--radius-sm); border: 1.5px solid var(--glass-border);
+    background: rgba(255,255,255,0.04); color: var(--text-muted);
+    font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all .2s; user-select: none;
   }
   .pill:hover { border-color: var(--purple-light); color: var(--text); background: rgba(124,58,237,0.1); }
   .pill.selected {
     border-color: var(--purple-light);
     background: linear-gradient(135deg, rgba(124,58,237,0.35), rgba(167,139,250,0.2));
-    color: var(--text);
-    box-shadow: 0 0 18px rgba(124,58,237,0.3);
+    color: var(--text); box-shadow: 0 0 18px rgba(124,58,237,0.3);
   }
 
   /* ===== BUTTONS ===== */
@@ -199,53 +199,50 @@
   .btn:active { transform: scale(0.97); }
 
   .btn-primary {
-    width: 100%; padding: 18px 24px;
-    font-size: 1.15rem;
+    width: 100%; padding: 18px 24px; font-size: 1.15rem;
     background: linear-gradient(135deg, var(--purple), var(--purple-light));
-    color: #fff;
-    box-shadow: 0 6px 24px rgba(124,58,237,0.45);
-    border-radius: var(--radius);
+    color: #fff; box-shadow: 0 6px 24px rgba(124,58,237,0.45); border-radius: var(--radius);
   }
   .btn-primary:hover { box-shadow: 0 8px 32px rgba(124,58,237,0.6); transform: translateY(-1px); }
 
+  /* Teal mic – mode EN (עברית→אנגלית) */
   .btn-mic {
-    width: 100%; padding: 22px 24px;
-    font-size: 1.3rem;
+    width: 100%; padding: 22px 24px; font-size: 1.3rem;
     background: linear-gradient(135deg, var(--teal), var(--teal-light));
-    color: #fff;
-    box-shadow: 0 6px 24px rgba(13,148,136,0.45);
-    border-radius: var(--radius);
+    color: #fff; box-shadow: 0 6px 24px rgba(13,148,136,0.45); border-radius: var(--radius);
   }
   .btn-mic:hover { box-shadow: 0 8px 32px rgba(13,148,136,0.6); transform: translateY(-1px); }
+
+  /* Orange mic – mode HE (אנגלית→עברית) */
+  .btn-mic.mode-he {
+    background: linear-gradient(135deg, var(--orange), var(--orange-light));
+    color: #fff; box-shadow: 0 6px 24px rgba(249,115,22,0.45);
+  }
+  .btn-mic.mode-he:hover { box-shadow: 0 8px 32px rgba(249,115,22,0.6); }
+
   .btn-mic.listening {
-    background: linear-gradient(135deg, #DC2626, #F87171);
-    box-shadow: 0 6px 24px rgba(220,38,38,0.5);
+    background: linear-gradient(135deg, #DC2626, #F87171) !important;
+    box-shadow: 0 6px 24px rgba(220,38,38,0.5) !important;
     animation: pulse 1.2s ease-in-out infinite;
   }
   @keyframes pulse {
-    0%,100% { box-shadow: 0 6px 24px rgba(220,38,38,0.5); }
-    50%      { box-shadow: 0 6px 40px rgba(220,38,38,0.8); }
+    0%,100% { box-shadow: 0 6px 24px rgba(220,38,38,0.5) !important; }
+    50%      { box-shadow: 0 6px 40px rgba(220,38,38,0.8) !important; }
   }
 
   .btn-row { display: flex; gap: 10px; width: 100%; }
   .btn-secondary {
-    flex: 1; padding: 14px 12px;
-    font-size: 0.95rem;
-    background: rgba(255,255,255,0.07);
-    border: 1.5px solid var(--glass-border);
-    color: var(--text);
-    border-radius: var(--radius-sm);
+    flex: 1; padding: 14px 12px; font-size: 0.95rem;
+    background: rgba(255,255,255,0.07); border: 1.5px solid var(--glass-border);
+    color: var(--text); border-radius: var(--radius-sm);
   }
   .btn-secondary:hover { background: rgba(255,255,255,0.13); border-color: var(--purple-light); }
   .btn-secondary.hint-used { opacity: 0.5; cursor: default; }
 
   .btn-ghost {
-    padding: 10px 16px;
-    background: transparent;
-    border: 1.5px solid var(--glass-border);
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    border-radius: var(--radius-sm);
+    padding: 10px 16px; background: transparent;
+    border: 1.5px solid var(--glass-border); color: var(--text-muted);
+    font-size: 0.85rem; border-radius: var(--radius-sm);
   }
   .btn-ghost:hover { border-color: var(--pink); color: var(--pink-light); }
 
@@ -254,52 +251,56 @@
     width: 100%;
     background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(13,148,136,0.1));
     border: 1.5px solid rgba(167,139,250,0.25);
-    border-radius: var(--radius);
-    padding: 28px 22px 22px;
-    text-align: center;
+    border-radius: var(--radius); padding: 28px 22px 22px; text-align: center;
   }
+  /* Orange tint for HE mode */
+  .sentence-card.mode-he {
+    background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(124,58,237,0.1));
+    border-color: rgba(254,215,170,0.25);
+  }
+
   .sentence-meta {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
   }
   .topic-badge {
     padding: 4px 12px; border-radius: 50px;
     background: rgba(167,139,250,0.2); border: 1px solid rgba(167,139,250,0.3);
     font-size: 0.75rem; color: var(--purple-light); font-weight: 600;
   }
+  .topic-badge.mode-he {
+    background: rgba(249,115,22,0.2); border-color: rgba(249,115,22,0.3);
+    color: var(--orange-light);
+  }
   .attempt-info { font-size: 0.78rem; color: var(--text-muted); }
 
-  .sentence-en {
+  /* Mode label inside sentence card */
+  .mode-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.07em;
+    text-transform: uppercase; margin-bottom: 8px;
+    color: var(--teal-light); opacity: 0.8;
+  }
+  .mode-label.mode-he { color: var(--orange-light); }
+
+  .sentence-main {
     font-size: clamp(1.3rem, 4.5vw, 1.85rem);
     font-weight: 800; color: #fff;
-    line-height: 1.4; letter-spacing: 0.01em;
-    direction: ltr; text-align: center;
-    margin-bottom: 14px;
+    line-height: 1.4; margin-bottom: 14px;
   }
+  .sentence-main.ltr { direction: ltr; text-align: center; letter-spacing: 0.01em; }
+  .sentence-main.rtl { direction: rtl; text-align: center; }
 
-  /* Stars row */
-  .stars-row {
-    display: flex; justify-content: center; gap: 6px;
-  }
-  .star {
-    font-size: 1.6rem;
-    transition: all .25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
+  .stars-row { display: flex; justify-content: center; gap: 6px; }
+  .star { font-size: 1.6rem; transition: all .25s cubic-bezier(0.34, 1.56, 0.64, 1); }
   .star.filled { filter: drop-shadow(0 0 6px #FCD34D); }
   .star.empty { opacity: 0.25; }
   .star.bounce { animation: starBounce 0.4s cubic-bezier(0.34,1.56,0.64,1); }
   @keyframes starBounce {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.5); }
-    100% { transform: scale(1); }
+    0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); }
   }
 
-  /* Progress bar */
   .progress-wrap {
-    width: 100%;
-    background: rgba(255,255,255,0.08);
+    width: 100%; background: rgba(255,255,255,0.08);
     border-radius: 50px; height: 10px; overflow: hidden;
-    position: relative;
   }
   .progress-bar {
     height: 100%; border-radius: 50px;
@@ -307,81 +308,56 @@
     width: 0%; transition: width 0.1s linear;
     box-shadow: 0 0 10px rgba(94,234,212,0.5);
   }
-  .progress-label {
-    text-align: center; font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;
+  .progress-bar.mode-he {
+    background: linear-gradient(90deg, var(--orange), var(--orange-light));
+    box-shadow: 0 0 10px rgba(249,115,22,0.5);
   }
+  .progress-label { text-align: center; font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
 
-  /* Transcript & feedback areas */
   .transcript-area {
     width: 100%; min-height: 54px;
-    background: rgba(255,255,255,0.04);
-    border: 1.5px solid var(--glass-border);
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
-    font-size: 1rem; direction: ltr; text-align: left;
-    color: var(--teal-light);
-    word-break: break-word;
+    background: rgba(255,255,255,0.04); border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+    font-size: 1rem; color: var(--teal-light); word-break: break-word;
   }
+  .transcript-area.ltr { direction: ltr; text-align: left; }
+  .transcript-area.rtl { direction: rtl; text-align: right; }
+  .transcript-area.mode-he { color: var(--orange-light); }
   .transcript-area.empty { color: var(--text-muted); font-style: italic; }
 
   .feedback-area {
-    width: 100%; padding: 16px;
-    border-radius: var(--radius-sm);
-    font-size: 0.95rem; text-align: center; line-height: 1.55;
-    display: none;
+    width: 100%; padding: 16px; border-radius: var(--radius-sm);
+    font-size: 0.95rem; text-align: center; line-height: 1.55; display: none;
   }
   .feedback-area.success {
     display: block;
     background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(94,234,212,0.1));
-    border: 1.5px solid rgba(16,185,129,0.35);
-    color: #6EE7B7;
+    border: 1.5px solid rgba(16,185,129,0.35); color: #6EE7B7;
   }
   .feedback-area.error {
-    display: block;
-    background: rgba(239,68,68,0.1);
-    border: 1.5px solid rgba(239,68,68,0.25);
-    color: #FCA5A5;
+    display: block; background: rgba(239,68,68,0.1);
+    border: 1.5px solid rgba(239,68,68,0.25); color: #FCA5A5;
   }
   .feedback-area.hint {
-    display: block;
-    background: rgba(251,191,36,0.1);
-    border: 1.5px solid rgba(251,191,36,0.25);
-    color: #FDE68A;
+    display: block; background: rgba(251,191,36,0.1);
+    border: 1.5px solid rgba(251,191,36,0.25); color: #FDE68A;
   }
 
   .translation-box {
     display: none; width: 100%;
-    background: rgba(255,255,255,0.04);
-    border: 1.5px solid var(--glass-border);
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
-    font-size: 1rem; color: var(--text-muted);
-    text-align: center; direction: rtl;
+    background: rgba(255,255,255,0.04); border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+    font-size: 1rem; color: var(--text-muted); text-align: center;
   }
+  .translation-box.ltr { direction: ltr; }
+  .translation-box.rtl { direction: rtl; }
   .translation-box.visible { display: block; }
 
-  /* ===== CONFETTI ===== */
-  .confetti-container {
-    position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
-  }
-  .confetto {
-    position: absolute; width: 10px; height: 10px; top: -20px;
-    border-radius: 2px;
-    animation: confettiFall linear forwards;
-  }
-  @keyframes confettiFall {
-    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-  }
-
-  /* ===== RESULT BANNER ===== */
   .result-banner {
     display: none; width: 100%;
     background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(13,148,136,0.2));
     border: 1.5px solid rgba(167,139,250,0.35);
-    border-radius: var(--radius);
-    padding: 20px;
-    text-align: center;
+    border-radius: var(--radius); padding: 20px; text-align: center;
     animation: fadeUp 0.4s ease;
   }
   .result-banner.visible { display: block; }
@@ -389,23 +365,14 @@
   .result-stars { font-size: 1.8rem; margin-bottom: 10px; letter-spacing: 4px; }
   .result-msg { font-size: 0.92rem; color: var(--text-muted); margin-bottom: 16px; }
 
-  /* ===== MISC ===== */
-  .divider {
-    width: 100%; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
-  }
-
   .hint-word-chip {
-    display: inline-block; margin: 3px 4px;
-    padding: 4px 10px;
+    display: inline-block; margin: 3px 4px; padding: 4px 10px;
     background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3);
-    border-radius: 50px;
-    font-size: 0.88rem; font-weight: 600;
-    direction: ltr;
+    border-radius: 50px; font-size: 0.88rem; font-weight: 600;
   }
   .hint-word-chip .he { direction: rtl; color: var(--text-muted); font-size: 0.78rem; }
+  .hint-word-chip .en { direction: ltr; }
 
-  /* Error state */
   .error-banner {
     display: none; width: 100%;
     background: rgba(239,68,68,0.12); border: 1.5px solid rgba(239,68,68,0.3);
@@ -414,17 +381,18 @@
   }
   .error-banner.visible { display: block; }
 
-  /* Scroll for long content */
-  @media (max-height: 700px) {
-    #app { padding-top: 12px; }
-    .card { padding: 20px 18px; }
+  .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+  .confetto {
+    position: absolute; width: 10px; height: 10px; top: -20px; border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
 
-  /* Responsive tweaks */
-  @media (max-width: 400px) {
-    .sentence-en { font-size: 1.2rem; }
-    .btn-mic { font-size: 1.1rem; padding: 18px; }
-  }
+  @media (max-height: 700px) { #app { padding-top: 12px; } .card { padding: 20px 18px; } }
+  @media (max-width: 400px) { .sentence-main { font-size: 1.2rem; } .btn-mic { font-size: 1.1rem; padding: 18px; } }
 </style>
 </head>
 <body>
@@ -434,7 +402,6 @@
   <div class="blob blob-2"></div>
   <div class="blob blob-3"></div>
 </div>
-
 <div id="confetti-container" class="confetti-container"></div>
 
 <div id="app">
@@ -448,23 +415,32 @@
         <div class="logo-sub">Speech & English Trainer</div>
       </div>
     </div>
-    <div class="stars-total" id="stars-total-display">
+    <div class="stars-total">
       <span class="star-icon">⭐</span>
       <span class="star-count" id="total-stars-num">0</span>
       <span class="star-label">כוכבים</span>
     </div>
   </header>
 
+  <!-- MODE TABS -->
+  <div class="mode-tabs" id="mode-tabs">
+    <button class="mode-tab active-en" id="tab-en" onclick="switchMode('en')">
+      <span class="tab-icon">🇮🇱→🇬🇧</span>
+      <span class="tab-label">עברית<br>לאנגלית</span>
+    </button>
+    <button class="mode-tab" id="tab-he" onclick="switchMode('he')">
+      <span class="tab-icon">🇬🇧→🇮🇱</span>
+      <span class="tab-label">אנגלית<br>לעברית</span>
+    </button>
+  </div>
+
   <!-- ===== SETTINGS SCREEN ===== -->
   <div class="screen active" id="screen-settings">
     <div class="card">
-      <div class="screen-title">✨ בואו נתרגל אנגלית!</div>
-      <div class="screen-subtitle">בחרו רמה ונושא ונתחיל 🚀</div>
+      <div class="screen-title" id="settings-title">✨ תרגום לאנגלית!</div>
+      <div class="screen-subtitle" id="settings-subtitle">ראה משפט עברי – תרגם לאנגלית בקול 🎤</div>
     </div>
-
     <div class="card" style="gap:18px;display:flex;flex-direction:column;">
-
-      <!-- Difficulty -->
       <div class="field-group">
         <label class="field-label">רמת קושי</label>
         <div class="pills" id="difficulty-pills">
@@ -473,8 +449,6 @@
           <div class="pill" data-level="advanced">🌳 מתקדם</div>
         </div>
       </div>
-
-      <!-- Topic -->
       <div class="field-group">
         <label class="field-label" for="topic-select">נושא</label>
         <select class="custom-select" id="topic-select">
@@ -492,62 +466,42 @@
           <option value="feelings">💭 רגשות ותחושות</option>
         </select>
       </div>
-
-      <!-- Error -->
       <div class="error-banner" id="settings-error"></div>
-
-      <button class="btn btn-primary" id="btn-create-sentence" onclick="createSentence()">
-        ✨ יצירת משפט
-      </button>
+      <button class="btn btn-primary" id="btn-create-sentence" onclick="createSentence()">✨ יצירת משפט</button>
     </div>
   </div>
 
   <!-- ===== PRACTICE SCREEN ===== -->
   <div class="screen" id="screen-practice">
 
-    <!-- Sentence card -->
     <div class="sentence-card" id="sentence-card">
       <div class="sentence-meta">
         <div class="topic-badge" id="topic-badge">—</div>
         <div class="attempt-info" id="attempt-info">ניסיון 1</div>
       </div>
-      <div class="sentence-en" id="sentence-en">—</div>
-      <div class="stars-row" id="sentence-stars">
-        <span class="star filled">⭐</span>
-        <span class="star filled">⭐</span>
-        <span class="star filled">⭐</span>
-        <span class="star filled">⭐</span>
-        <span class="star filled">⭐</span>
-      </div>
+      <div class="mode-label" id="mode-label">תרגם לאנגלית</div>
+      <div class="sentence-main" id="sentence-main">—</div>
+      <div class="stars-row" id="sentence-stars"></div>
     </div>
 
-    <!-- Progress bar -->
     <div style="width:100%">
       <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
-      <div class="progress-label" id="progress-label">קרא את המשפט ותרגם אותו לעברית בקול</div>
+      <div class="progress-label" id="progress-label">לחץ על הכפתור והתחל לדבר</div>
     </div>
 
-    <!-- MIC BUTTON -->
     <button class="btn btn-mic" id="btn-mic" onclick="toggleListening()">
-      🎤 תרגם לעברית בקול
+      🎤 דבר עכשיו
     </button>
 
-    <!-- Hint / Translation row -->
     <div class="btn-row">
       <button class="btn btn-secondary" id="btn-hint" onclick="showHint()">💡 רמז</button>
-      <button class="btn btn-secondary" id="btn-translate" onclick="toggleTranslation()">🔤 הצג תרגום מלא</button>
+      <button class="btn btn-secondary" id="btn-translate" onclick="toggleTranslation()">🔤 הצג תרגום</button>
     </div>
 
-    <!-- Translation box -->
     <div class="translation-box" id="translation-box"></div>
-
-    <!-- Transcript -->
-    <div class="transcript-area empty" id="transcript-area">התרגום שלך לעברית יופיע כאן...</div>
-
-    <!-- Feedback -->
+    <div class="transcript-area empty ltr" id="transcript-area">מה שתגיד יופיע כאן...</div>
     <div class="feedback-area" id="feedback-area"></div>
 
-    <!-- Result banner (shows after success) -->
     <div class="result-banner" id="result-banner">
       <div class="result-title" id="result-title"></div>
       <div class="result-stars" id="result-stars-display"></div>
@@ -558,254 +512,240 @@
       </div>
     </div>
 
-    <!-- Back button -->
-    <button class="btn btn-ghost" onclick="goSettings()" style="align-self:center">
-      ← חזרה להגדרות
-    </button>
-
+    <button class="btn btn-ghost" onclick="goSettings()" style="align-self:center">← חזרה להגדרות</button>
   </div>
 
 </div>
 
 <script>
 /* ==========================================================
-   DATA – SENTENCE BANK
-   Each entry: { en, he, words: [{en, he}] }
-   Organized by topic × difficulty
+   SENTENCE BANK
+   Every entry: { en, he, words:[{en,he}] }
+   words = hint pairs, shown one at a time
    ========================================================== */
 const SENTENCES = {
   animals: {
     beginner: [
-      { en: "The dog is happy.", he: "הכלב שמח.", words: [{en:"The dog",he:"הכלב"},{en:"is happy",he:"שמח"}] },
-      { en: "The cat drinks milk.", he: "החתול שותה חלב.", words: [{en:"The cat",he:"החתול"},{en:"drinks milk",he:"שותה חלב"}] },
-      { en: "I love animals.", he: "אני אוהב חיות.", words: [{en:"I love",he:"אני אוהב"},{en:"animals",he:"חיות"}] },
-      { en: "Birds can fly.", he: "ציפורים יכולות לעוף.", words: [{en:"Birds",he:"ציפורים"},{en:"can fly",he:"יכולות לעוף"}] },
-      { en: "The rabbit is white.", he: "הארנב לבן.", words: [{en:"The rabbit",he:"הארנב"},{en:"is white",he:"לבן"}] },
+      { en:"The dog is happy.",               he:"הכלב שמח.",                          words:[{en:"The dog",he:"הכלב"},{en:"is happy",he:"שמח"}] },
+      { en:"The cat drinks milk.",             he:"החתול שותה חלב.",                    words:[{en:"The cat",he:"החתול"},{en:"drinks milk",he:"שותה חלב"}] },
+      { en:"I love animals.",                  he:"אני אוהב חיות.",                     words:[{en:"I love",he:"אני אוהב"},{en:"animals",he:"חיות"}] },
+      { en:"Birds can fly.",                   he:"ציפורים יכולות לעוף.",               words:[{en:"Birds",he:"ציפורים"},{en:"can fly",he:"יכולות לעוף"}] },
+      { en:"The rabbit is white.",             he:"הארנב לבן.",                         words:[{en:"The rabbit",he:"הארנב"},{en:"is white",he:"לבן"}] },
     ],
     intermediate: [
-      { en: "Elephants have very good memory.", he: "לפילים יש זיכרון מצוין.", words: [{en:"Elephants",he:"פילים"},{en:"have very good memory",he:"זיכרון מצוין"}] },
-      { en: "The lion is the king of the jungle.", he: "האריה הוא מלך הג'ונגל.", words: [{en:"The lion",he:"האריה"},{en:"is the king",he:"הוא המלך"},{en:"of the jungle",he:"של הג'ונגל"}] },
-      { en: "Dolphins are very intelligent animals.", he: "דולפינים הם חיות חכמות מאוד.", words: [{en:"Dolphins",he:"דולפינים"},{en:"are very intelligent",he:"חכמות מאוד"}] },
-      { en: "My dog loves to play in the park.", he: "הכלב שלי אוהב לשחק בפארק.", words: [{en:"My dog",he:"הכלב שלי"},{en:"loves to play",he:"אוהב לשחק"},{en:"in the park",he:"בפארק"}] },
-      { en: "Penguins live in cold places.", he: "פינגווינים חיים במקומות קרים.", words: [{en:"Penguins",he:"פינגווינים"},{en:"live in cold places",he:"חיים במקומות קרים"}] },
+      { en:"Elephants have very good memory.",         he:"לפילים יש זיכרון מצוין.",           words:[{en:"Elephants",he:"פילים"},{en:"very good memory",he:"זיכרון מצוין"}] },
+      { en:"The lion is the king of the jungle.",      he:"האריה הוא מלך הג'ונגל.",            words:[{en:"The lion",he:"האריה"},{en:"king of the jungle",he:"מלך הג'ונגל"}] },
+      { en:"Dolphins are very intelligent animals.",   he:"דולפינים הם חיות חכמות מאוד.",      words:[{en:"Dolphins",he:"דולפינים"},{en:"intelligent",he:"חכמות"}] },
+      { en:"My dog loves to play in the park.",        he:"הכלב שלי אוהב לשחק בפארק.",        words:[{en:"My dog",he:"הכלב שלי"},{en:"loves to play",he:"אוהב לשחק"},{en:"in the park",he:"בפארק"}] },
+      { en:"Penguins live in cold places.",            he:"פינגווינים חיים במקומות קרים.",     words:[{en:"Penguins",he:"פינגווינים"},{en:"cold places",he:"מקומות קרים"}] },
     ],
     advanced: [
-      { en: "Many species of animals are endangered due to climate change.", he: "מינים רבים של חיות בסכנת הכחדה בגלל שינויי אקלים.", words: [{en:"Many species",he:"מינים רבים"},{en:"are endangered",he:"בסכנת הכחדה"},{en:"due to climate change",he:"בגלל שינויי אקלים"}] },
-      { en: "Marine biologists study the behavior of ocean creatures.", he: "ביולוגים ימיים חוקרים את התנהגות יצורי הים.", words: [{en:"Marine biologists",he:"ביולוגים ימיים"},{en:"study the behavior",he:"חוקרים את ההתנהגות"},{en:"of ocean creatures",he:"של יצורי הים"}] },
-      { en: "The migration patterns of birds are truly fascinating.", he: "דפוסי הנדידה של ציפורים מרתקים באמת.", words: [{en:"Migration patterns",he:"דפוסי נדידה"},{en:"are truly fascinating",he:"מרתקים באמת"}] },
-      { en: "Cheetahs can reach speeds of up to one hundred kilometers per hour.", he: "צ'יטות יכולות להגיע למהירות של עד מאה קמ\"ש.", words: [{en:"Cheetahs",he:"צ'יטות"},{en:"can reach speeds",he:"יכולות להגיע למהירות"},{en:"of up to",he:"של עד"}] },
+      { en:"Many species of animals are endangered due to climate change.", he:"מינים רבים של חיות בסכנת הכחדה בגלל שינויי אקלים.", words:[{en:"species",he:"מינים"},{en:"endangered",he:"בסכנת הכחדה"},{en:"climate change",he:"שינויי אקלים"}] },
+      { en:"Marine biologists study the behavior of ocean creatures.",      he:"ביולוגים ימיים חוקרים את התנהגות יצורי הים.",      words:[{en:"Marine biologists",he:"ביולוגים ימיים"},{en:"behavior",he:"התנהגות"},{en:"ocean creatures",he:"יצורי הים"}] },
+      { en:"The migration patterns of birds are truly fascinating.",        he:"דפוסי הנדידה של ציפורים מרתקים באמת.",             words:[{en:"migration patterns",he:"דפוסי נדידה"},{en:"fascinating",he:"מרתקים"}] },
+      { en:"Cheetahs can reach speeds of up to one hundred kilometers per hour.", he:"צ'יטות יכולות להגיע למהירות של עד מאה קמ\"ש.", words:[{en:"Cheetahs",he:"צ'יטות"},{en:"reach speeds",he:"להגיע למהירות"}] },
     ],
   },
   food: {
     beginner: [
-      { en: "I eat breakfast every morning.", he: "אני אוכל ארוחת בוקר כל בוקר.", words: [{en:"I eat",he:"אני אוכל"},{en:"breakfast",he:"ארוחת בוקר"},{en:"every morning",he:"כל בוקר"}] },
-      { en: "Pizza is my favorite food.", he: "פיצה היא האוכל האהוב עלי.", words: [{en:"Pizza",he:"פיצה"},{en:"is my favorite",he:"האהובה עלי"}] },
-      { en: "I drink water every day.", he: "אני שותה מים כל יום.", words: [{en:"I drink water",he:"אני שותה מים"},{en:"every day",he:"כל יום"}] },
-      { en: "The apple is red and sweet.", he: "התפוח אדום ומתוק.", words: [{en:"The apple",he:"התפוח"},{en:"is red and sweet",he:"אדום ומתוק"}] },
-      { en: "We eat lunch at school.", he: "אנחנו אוכלים ארוחת צהריים בבית הספר.", words: [{en:"We eat lunch",he:"אנחנו אוכלים צהריים"},{en:"at school",he:"בבית הספר"}] },
+      { en:"I eat breakfast every morning.", he:"אני אוכל ארוחת בוקר כל בוקר.", words:[{en:"breakfast",he:"ארוחת בוקר"},{en:"every morning",he:"כל בוקר"}] },
+      { en:"Pizza is my favorite food.",     he:"פיצה היא האוכל האהוב עלי.",    words:[{en:"Pizza",he:"פיצה"},{en:"favorite",he:"אהוב"}] },
+      { en:"I drink water every day.",       he:"אני שותה מים כל יום.",         words:[{en:"drink water",he:"שותה מים"},{en:"every day",he:"כל יום"}] },
+      { en:"The apple is red and sweet.",    he:"התפוח אדום ומתוק.",            words:[{en:"apple",he:"תפוח"},{en:"red and sweet",he:"אדום ומתוק"}] },
+      { en:"We eat lunch at school.",        he:"אנחנו אוכלים צהריים בבית הספר.", words:[{en:"lunch",he:"ארוחת צהריים"},{en:"at school",he:"בבית הספר"}] },
     ],
     intermediate: [
-      { en: "My mother cooks delicious pasta on Fridays.", he: "אמא שלי מבשלת פסטה טעימה בימי שישי.", words: [{en:"My mother",he:"אמא שלי"},{en:"cooks delicious pasta",he:"מבשלת פסטה טעימה"},{en:"on Fridays",he:"בימי שישי"}] },
-      { en: "I prefer vegetables over junk food.", he: "אני מעדיף ירקות על פני אוכל זבל.", words: [{en:"I prefer",he:"אני מעדיף"},{en:"vegetables",he:"ירקות"},{en:"over junk food",he:"על פני אוכל זבל"}] },
-      { en: "The restaurant serves fresh seafood every day.", he: "המסעדה מגישה פירות ים טריים כל יום.", words: [{en:"The restaurant",he:"המסעדה"},{en:"serves fresh seafood",he:"מגישה פירות ים טריים"}] },
-      { en: "She baked a chocolate cake for the party.", he: "היא אפתה עוגת שוקולד למסיבה.", words: [{en:"She baked",he:"היא אפתה"},{en:"a chocolate cake",he:"עוגת שוקולד"},{en:"for the party",he:"למסיבה"}] },
+      { en:"My mother cooks delicious pasta on Fridays.",       he:"אמא שלי מבשלת פסטה טעימה בימי שישי.",     words:[{en:"cooks",he:"מבשלת"},{en:"delicious",he:"טעימה"},{en:"on Fridays",he:"בימי שישי"}] },
+      { en:"I prefer vegetables over junk food.",              he:"אני מעדיף ירקות על פני אוכל זבל.",        words:[{en:"prefer",he:"מעדיף"},{en:"vegetables",he:"ירקות"},{en:"junk food",he:"אוכל זבל"}] },
+      { en:"The restaurant serves fresh seafood every day.",   he:"המסעדה מגישה פירות ים טריים כל יום.",     words:[{en:"restaurant",he:"מסעדה"},{en:"fresh seafood",he:"פירות ים טריים"}] },
+      { en:"She baked a chocolate cake for the party.",        he:"היא אפתה עוגת שוקולד למסיבה.",           words:[{en:"baked",he:"אפתה"},{en:"chocolate cake",he:"עוגת שוקולד"},{en:"party",he:"מסיבה"}] },
     ],
     advanced: [
-      { en: "A balanced diet includes proteins, carbohydrates, and healthy fats.", he: "תזונה מאוזנת כוללת חלבונים, פחמימות ושומנים בריאים.", words: [{en:"A balanced diet",he:"תזונה מאוזנת"},{en:"includes proteins",he:"כוללת חלבונים"},{en:"and healthy fats",he:"ושומנים בריאים"}] },
-      { en: "Fermented foods are beneficial for digestive health.", he: "מזונות מותססים מועילים לבריאות מערכת העיכול.", words: [{en:"Fermented foods",he:"מזונות מותססים"},{en:"are beneficial",he:"מועילים"},{en:"for digestive health",he:"לבריאות העיכול"}] },
-      { en: "The chef prepared an extraordinary meal using local ingredients.", he: "השף הכין ארוחה יוצאת דופן ממרכיבים מקומיים.", words: [{en:"The chef prepared",he:"השף הכין"},{en:"an extraordinary meal",he:"ארוחה יוצאת דופן"},{en:"using local ingredients",he:"ממרכיבים מקומיים"}] },
+      { en:"A balanced diet includes proteins, carbohydrates, and healthy fats.", he:"תזונה מאוזנת כוללת חלבונים, פחמימות ושומנים בריאים.", words:[{en:"balanced diet",he:"תזונה מאוזנת"},{en:"proteins",he:"חלבונים"},{en:"carbohydrates",he:"פחמימות"}] },
+      { en:"Fermented foods are beneficial for digestive health.",               he:"מזונות מותססים מועילים לבריאות מערכת העיכול.",        words:[{en:"Fermented",he:"מותססים"},{en:"beneficial",he:"מועילים"},{en:"digestive",he:"עיכול"}] },
+      { en:"The chef prepared an extraordinary meal using local ingredients.",   he:"השף הכין ארוחה יוצאת דופן ממרכיבים מקומיים.",         words:[{en:"chef",he:"שף"},{en:"extraordinary",he:"יוצאת דופן"},{en:"local ingredients",he:"מרכיבים מקומיים"}] },
     ],
   },
   school: {
     beginner: [
-      { en: "I go to school by bus.", he: "אני הולך לבית ספר באוטובוס.", words: [{en:"I go to school",he:"אני הולך לבית ספר"},{en:"by bus",he:"באוטובוס"}] },
-      { en: "My teacher is very kind.", he: "המורה שלי מאוד נחמד.", words: [{en:"My teacher",he:"המורה שלי"},{en:"is very kind",he:"מאוד נחמד"}] },
-      { en: "I have five books in my bag.", he: "יש לי חמישה ספרים בתיק.", words: [{en:"I have five books",he:"יש לי חמישה ספרים"},{en:"in my bag",he:"בתיק"}] },
-      { en: "We study math and English.", he: "אנחנו לומדים מתמטיקה ואנגלית.", words: [{en:"We study",he:"אנחנו לומדים"},{en:"math and English",he:"מתמטיקה ואנגלית"}] },
-      { en: "School starts at eight in the morning.", he: "בית הספר מתחיל בשמונה בבוקר.", words: [{en:"School starts",he:"בית הספר מתחיל"},{en:"at eight",he:"בשמונה"},{en:"in the morning",he:"בבוקר"}] },
+      { en:"I go to school by bus.",            he:"אני הולך לבית ספר באוטובוס.",       words:[{en:"school",he:"בית ספר"},{en:"by bus",he:"באוטובוס"}] },
+      { en:"My teacher is very kind.",          he:"המורה שלי מאוד נחמד.",              words:[{en:"teacher",he:"מורה"},{en:"kind",he:"נחמד"}] },
+      { en:"I have five books in my bag.",      he:"יש לי חמישה ספרים בתיק.",          words:[{en:"five books",he:"חמישה ספרים"},{en:"bag",he:"תיק"}] },
+      { en:"We study math and English.",        he:"אנחנו לומדים מתמטיקה ואנגלית.",    words:[{en:"study",he:"לומדים"},{en:"math",he:"מתמטיקה"}] },
+      { en:"School starts at eight in the morning.", he:"בית הספר מתחיל בשמונה בבוקר.", words:[{en:"starts",he:"מתחיל"},{en:"eight",he:"שמונה"},{en:"morning",he:"בוקר"}] },
     ],
     intermediate: [
-      { en: "Our science project is about solar energy.", he: "הפרויקט מדעים שלנו עוסק באנרגיה סולארית.", words: [{en:"Our science project",he:"הפרויקט מדעים שלנו"},{en:"is about solar energy",he:"עוסק באנרגיה סולארית"}] },
-      { en: "The library has thousands of interesting books.", he: "לספרייה יש אלפי ספרים מעניינים.", words: [{en:"The library",he:"הספרייה"},{en:"has thousands of",he:"יש בה אלפי"},{en:"interesting books",he:"ספרים מעניינים"}] },
-      { en: "We have a history test next Monday.", he: "יש לנו מבחן היסטוריה ביום שני הבא.", words: [{en:"We have a history test",he:"יש לנו מבחן היסטוריה"},{en:"next Monday",he:"ביום שני הבא"}] },
-      { en: "I enjoy drawing during art class.", he: "אני נהנה לצייר בשיעור אמנות.", words: [{en:"I enjoy drawing",he:"אני נהנה לצייר"},{en:"during art class",he:"בשיעור אמנות"}] },
+      { en:"Our science project is about solar energy.",       he:"הפרויקט מדעים שלנו עוסק באנרגיה סולארית.", words:[{en:"science project",he:"פרויקט מדעים"},{en:"solar energy",he:"אנרגיה סולארית"}] },
+      { en:"The library has thousands of interesting books.",  he:"לספרייה יש אלפי ספרים מעניינים.",          words:[{en:"library",he:"ספרייה"},{en:"thousands",he:"אלפי"},{en:"interesting",he:"מעניינים"}] },
+      { en:"We have a history test next Monday.",              he:"יש לנו מבחן היסטוריה ביום שני הבא.",       words:[{en:"history test",he:"מבחן היסטוריה"},{en:"next Monday",he:"יום שני הבא"}] },
+      { en:"I enjoy drawing during art class.",               he:"אני נהנה לצייר בשיעור אמנות.",             words:[{en:"enjoy",he:"נהנה"},{en:"drawing",he:"לצייר"},{en:"art class",he:"שיעור אמנות"}] },
     ],
     advanced: [
-      { en: "Critical thinking skills are essential for academic success.", he: "כישורי חשיבה ביקורתית חיוניים להצלחה אקדמית.", words: [{en:"Critical thinking skills",he:"כישורי חשיבה ביקורתית"},{en:"are essential",he:"חיוניים"},{en:"for academic success",he:"להצלחה אקדמית"}] },
-      { en: "The curriculum has been updated to include digital literacy.", he: "תוכנית הלימודים עודכנה כדי לכלול אוריינות דיגיטלית.", words: [{en:"The curriculum",he:"תוכנית הלימודים"},{en:"has been updated",he:"עודכנה"},{en:"digital literacy",he:"אוריינות דיגיטלית"}] },
-      { en: "Students who read regularly tend to perform better in exams.", he: "תלמידים שקוראים באופן קבוע נוטים להצליח יותר במבחנים.", words: [{en:"Students who read regularly",he:"תלמידים שקוראים באופן קבוע"},{en:"tend to perform better",he:"נוטים להצליח יותר"}] },
+      { en:"Critical thinking skills are essential for academic success.", he:"כישורי חשיבה ביקורתית חיוניים להצלחה אקדמית.", words:[{en:"critical thinking",he:"חשיבה ביקורתית"},{en:"essential",he:"חיוניים"},{en:"academic success",he:"הצלחה אקדמית"}] },
+      { en:"The curriculum has been updated to include digital literacy.",  he:"תוכנית הלימודים עודכנה כדי לכלול אוריינות דיגיטלית.", words:[{en:"curriculum",he:"תוכנית לימודים"},{en:"digital literacy",he:"אוריינות דיגיטלית"}] },
+      { en:"Students who read regularly tend to perform better in exams.", he:"תלמידים שקוראים באופן קבוע נוטים להצליח יותר במבחנים.", words:[{en:"regularly",he:"באופן קבוע"},{en:"perform better",he:"להצליח יותר"}] },
     ],
   },
   sports: {
     beginner: [
-      { en: "I play football with my friends.", he: "אני משחק כדורגל עם חברים.", words: [{en:"I play football",he:"אני משחק כדורגל"},{en:"with my friends",he:"עם החברים שלי"}] },
-      { en: "She swims in the pool every week.", he: "היא שוחה בבריכה כל שבוע.", words: [{en:"She swims",he:"היא שוחה"},{en:"in the pool",he:"בבריכה"},{en:"every week",he:"כל שבוע"}] },
-      { en: "Running is good for your health.", he: "ריצה טובה לבריאות שלך.", words: [{en:"Running",he:"ריצה"},{en:"is good for",he:"טובה ל"},{en:"your health",he:"הבריאות שלך"}] },
-      { en: "My favorite team won the game.", he: "הקבוצה האהובה עלי ניצחה במשחק.", words: [{en:"My favorite team",he:"הקבוצה האהובה עלי"},{en:"won the game",he:"ניצחה במשחק"}] },
-      { en: "I ride my bicycle in the park.", he: "אני רוכב על האופניים בפארק.", words: [{en:"I ride my bicycle",he:"אני רוכב על האופניים"},{en:"in the park",he:"בפארק"}] },
+      { en:"I play football with my friends.", he:"אני משחק כדורגל עם חברים.",          words:[{en:"play football",he:"משחק כדורגל"},{en:"friends",he:"חברים"}] },
+      { en:"She swims in the pool every week.", he:"היא שוחה בבריכה כל שבוע.",          words:[{en:"swims",he:"שוחה"},{en:"pool",he:"בריכה"},{en:"every week",he:"כל שבוע"}] },
+      { en:"Running is good for your health.", he:"ריצה טובה לבריאות שלך.",             words:[{en:"Running",he:"ריצה"},{en:"health",he:"בריאות"}] },
+      { en:"My favorite team won the game.",   he:"הקבוצה האהובה עלי ניצחה במשחק.",    words:[{en:"favorite team",he:"קבוצה אהובה"},{en:"won",he:"ניצחה"}] },
+      { en:"I ride my bicycle in the park.",   he:"אני רוכב על האופניים בפארק.",        words:[{en:"ride",he:"רוכב"},{en:"bicycle",he:"אופניים"},{en:"park",he:"פארק"}] },
     ],
     intermediate: [
-      { en: "Basketball requires both skill and teamwork.", he: "כדורסל דורש הן מיומנות והן עבודת צוות.", words: [{en:"Basketball requires",he:"כדורסל דורש"},{en:"both skill and teamwork",he:"הן מיומנות והן עבודת צוות"}] },
-      { en: "The marathon runner finished the race in record time.", he: "רץ המרתון סיים את המרוץ בזמן שיא.", words: [{en:"The marathon runner",he:"רץ המרתון"},{en:"finished the race",he:"סיים את המרוץ"},{en:"in record time",he:"בזמן שיא"}] },
-      { en: "I have been practicing tennis for three years.", he: "אני מתאמן טניס כבר שלוש שנים.", words: [{en:"I have been practicing",he:"אני מתאמן"},{en:"tennis",he:"טניס"},{en:"for three years",he:"שלוש שנים"}] },
+      { en:"Basketball requires both skill and teamwork.",              he:"כדורסל דורש הן מיומנות והן עבודת צוות.", words:[{en:"Basketball",he:"כדורסל"},{en:"skill",he:"מיומנות"},{en:"teamwork",he:"עבודת צוות"}] },
+      { en:"The marathon runner finished the race in record time.",     he:"רץ המרתון סיים את המרוץ בזמן שיא.",     words:[{en:"marathon runner",he:"רץ מרתון"},{en:"record time",he:"זמן שיא"}] },
+      { en:"I have been practicing tennis for three years.",            he:"אני מתאמן טניס כבר שלוש שנים.",         words:[{en:"practicing",he:"מתאמן"},{en:"tennis",he:"טניס"},{en:"three years",he:"שלוש שנים"}] },
     ],
     advanced: [
-      { en: "Professional athletes dedicate years to perfecting their technique.", he: "ספורטאים מקצועיים מקדישים שנים לשכלול הטכניקה שלהם.", words: [{en:"Professional athletes",he:"ספורטאים מקצועיים"},{en:"dedicate years",he:"מקדישים שנים"},{en:"to perfecting their technique",he:"לשכלול הטכניקה"}] },
-      { en: "The Olympic Games unite athletes from around the world.", he: "המשחקים האולימפיים מאחדים ספורטאים מרחבי העולם.", words: [{en:"The Olympic Games",he:"המשחקים האולימפיים"},{en:"unite athletes",he:"מאחדים ספורטאים"},{en:"from around the world",he:"מרחבי העולם"}] },
-      { en: "Sports psychology plays a significant role in competitive performance.", he: "פסיכולוגיית ספורט ממלאת תפקיד משמעותי בביצועים תחרותיים.", words: [{en:"Sports psychology",he:"פסיכולוגיית ספורט"},{en:"plays a significant role",he:"ממלאת תפקיד משמעותי"},{en:"in competitive performance",he:"בביצועים תחרותיים"}] },
+      { en:"Professional athletes dedicate years to perfecting their technique.", he:"ספורטאים מקצועיים מקדישים שנים לשכלול הטכניקה שלהם.", words:[{en:"Professional athletes",he:"ספורטאים מקצועיים"},{en:"perfecting",he:"שכלול"},{en:"technique",he:"טכניקה"}] },
+      { en:"The Olympic Games unite athletes from around the world.",             he:"המשחקים האולימפיים מאחדים ספורטאים מרחבי העולם.",       words:[{en:"Olympic Games",he:"משחקים אולימפיים"},{en:"unite",he:"מאחדים"}] },
+      { en:"Sports psychology plays a significant role in competitive performance.", he:"פסיכולוגיית ספורט ממלאת תפקיד משמעותי בביצועים תחרותיים.", words:[{en:"psychology",he:"פסיכולוגיה"},{en:"significant role",he:"תפקיד משמעותי"},{en:"competitive",he:"תחרותי"}] },
     ],
   },
   family: {
     beginner: [
-      { en: "My family has four members.", he: "המשפחה שלי מורכבת מארבעה חברים.", words: [{en:"My family",he:"המשפחה שלי"},{en:"has four members",he:"מורכבת מארבעה"}] },
-      { en: "My brother is ten years old.", he: "אחי בן עשר.", words: [{en:"My brother",he:"אחי"},{en:"is ten years old",he:"בן עשר"}] },
-      { en: "We eat dinner together every night.", he: "אנחנו אוכלים ארוחת ערב יחד כל לילה.", words: [{en:"We eat dinner together",he:"אנחנו אוכלים ארוחת ערב יחד"},{en:"every night",he:"כל לילה"}] },
-      { en: "My grandmother tells me wonderful stories.", he: "סבתא שלי מספרת לי סיפורים נפלאים.", words: [{en:"My grandmother",he:"סבתא שלי"},{en:"tells me wonderful stories",he:"מספרת לי סיפורים נפלאים"}] },
+      { en:"My family has four members.",              he:"המשפחה שלי מורכבת מארבעה חברים.",          words:[{en:"family",he:"משפחה"},{en:"four members",he:"ארבעה חברים"}] },
+      { en:"My brother is ten years old.",             he:"אחי בן עשר.",                              words:[{en:"brother",he:"אח"},{en:"ten years old",he:"בן עשר"}] },
+      { en:"We eat dinner together every night.",      he:"אנחנו אוכלים ארוחת ערב יחד כל לילה.",     words:[{en:"dinner",he:"ארוחת ערב"},{en:"together",he:"יחד"},{en:"every night",he:"כל לילה"}] },
+      { en:"My grandmother tells me wonderful stories.", he:"סבתא שלי מספרת לי סיפורים נפלאים.",     words:[{en:"grandmother",he:"סבתא"},{en:"wonderful stories",he:"סיפורים נפלאים"}] },
     ],
     intermediate: [
-      { en: "My parents work hard to support our family.", he: "ההורים שלי עובדים קשה כדי לתמוך במשפחה.", words: [{en:"My parents",he:"ההורים שלי"},{en:"work hard",he:"עובדים קשה"},{en:"to support our family",he:"לתמוך במשפחה"}] },
-      { en: "We celebrate holidays with the whole family.", he: "אנחנו חוגגים חגים עם כל המשפחה.", words: [{en:"We celebrate holidays",he:"אנחנו חוגגים חגים"},{en:"with the whole family",he:"עם כל המשפחה"}] },
-      { en: "My sister and I share a bedroom.", he: "אחותי ואני חולקים חדר שינה.", words: [{en:"My sister and I",he:"אחותי ואני"},{en:"share a bedroom",he:"חולקים חדר שינה"}] },
+      { en:"My parents work hard to support our family.", he:"ההורים שלי עובדים קשה כדי לתמוך במשפחה.", words:[{en:"parents",he:"הורים"},{en:"work hard",he:"עובדים קשה"},{en:"support",he:"לתמוך"}] },
+      { en:"We celebrate holidays with the whole family.", he:"אנחנו חוגגים חגים עם כל המשפחה.",         words:[{en:"celebrate",he:"חוגגים"},{en:"holidays",he:"חגים"},{en:"whole family",he:"כל המשפחה"}] },
+      { en:"My sister and I share a bedroom.",            he:"אחותי ואני חולקים חדר שינה.",              words:[{en:"sister",he:"אחות"},{en:"share",he:"חולקים"},{en:"bedroom",he:"חדר שינה"}] },
     ],
     advanced: [
-      { en: "Family relationships shape our personality and values.", he: "יחסי משפחה מעצבים את אישיותנו וערכינו.", words: [{en:"Family relationships",he:"יחסי משפחה"},{en:"shape our personality",he:"מעצבים את אישיותנו"},{en:"and values",he:"וערכינו"}] },
-      { en: "Maintaining strong family bonds requires communication and respect.", he: "שמירה על קשרי משפחה חזקים דורשת תקשורת וכבוד.", words: [{en:"Maintaining strong bonds",he:"שמירה על קשרים חזקים"},{en:"requires communication",he:"דורשת תקשורת"},{en:"and respect",he:"וכבוד"}] },
+      { en:"Family relationships shape our personality and values.",           he:"יחסי משפחה מעצבים את אישיותנו וערכינו.",                   words:[{en:"relationships",he:"יחסים"},{en:"shape",he:"מעצבים"},{en:"values",he:"ערכים"}] },
+      { en:"Maintaining strong family bonds requires communication and respect.", he:"שמירה על קשרי משפחה חזקים דורשת תקשורת וכבוד.",           words:[{en:"bonds",he:"קשרים"},{en:"communication",he:"תקשורת"},{en:"respect",he:"כבוד"}] },
     ],
   },
   colors: {
     beginner: [
-      { en: "The sky is blue and the grass is green.", he: "השמיים כחולים והדשא ירוק.", words: [{en:"The sky is blue",he:"השמיים כחולים"},{en:"the grass is green",he:"הדשא ירוק"}] },
-      { en: "I see a big red circle.", he: "אני רואה עיגול אדום גדול.", words: [{en:"I see",he:"אני רואה"},{en:"a big red circle",he:"עיגול אדום גדול"}] },
-      { en: "My favorite color is purple.", he: "הצבע האהוב עלי הוא סגול.", words: [{en:"My favorite color",he:"הצבע האהוב עלי"},{en:"is purple",he:"הוא סגול"}] },
-      { en: "The triangle is yellow and small.", he: "המשולש צהוב וקטן.", words: [{en:"The triangle",he:"המשולש"},{en:"is yellow and small",he:"צהוב וקטן"}] },
+      { en:"The sky is blue and the grass is green.", he:"השמיים כחולים והדשא ירוק.",       words:[{en:"sky",he:"שמיים"},{en:"blue",he:"כחול"},{en:"green",he:"ירוק"}] },
+      { en:"I see a big red circle.",                he:"אני רואה עיגול אדום גדול.",        words:[{en:"circle",he:"עיגול"},{en:"red",he:"אדום"},{en:"big",he:"גדול"}] },
+      { en:"My favorite color is purple.",           he:"הצבע האהוב עלי הוא סגול.",        words:[{en:"color",he:"צבע"},{en:"purple",he:"סגול"}] },
+      { en:"The triangle is yellow and small.",      he:"המשולש צהוב וקטן.",               words:[{en:"triangle",he:"משולש"},{en:"yellow",he:"צהוב"},{en:"small",he:"קטן"}] },
     ],
     intermediate: [
-      { en: "The rainbow has seven beautiful colors.", he: "לקשת יש שבעה צבעים יפים.", words: [{en:"The rainbow",he:"הקשת"},{en:"has seven beautiful colors",he:"יש לה שבעה צבעים יפים"}] },
-      { en: "Artists mix colors to create new shades.", he: "אמנים מערבבים צבעים כדי ליצור גוונים חדשים.", words: [{en:"Artists mix colors",he:"אמנים מערבבים צבעים"},{en:"to create new shades",he:"כדי ליצור גוונים חדשים"}] },
-      { en: "The square painting has orange and brown patterns.", he: "לציור המרובע יש דוגמאות בכתום וחום.", words: [{en:"The square painting",he:"הציור המרובע"},{en:"has orange and brown patterns",he:"יש לו דוגמאות בכתום וחום"}] },
+      { en:"The rainbow has seven beautiful colors.",         he:"לקשת יש שבעה צבעים יפים.",             words:[{en:"rainbow",he:"קשת"},{en:"seven",he:"שבעה"},{en:"beautiful",he:"יפים"}] },
+      { en:"Artists mix colors to create new shades.",       he:"אמנים מערבבים צבעים כדי ליצור גוונים חדשים.", words:[{en:"Artists",he:"אמנים"},{en:"mix",he:"מערבבים"},{en:"shades",he:"גוונים"}] },
+      { en:"The painting has orange and brown patterns.",    he:"לציור יש דוגמאות בכתום וחום.",         words:[{en:"painting",he:"ציור"},{en:"orange",he:"כתום"},{en:"brown",he:"חום"}] },
     ],
     advanced: [
-      { en: "Color psychology influences human emotions and behavior significantly.", he: "פסיכולוגיית הצבע משפיעה על רגשות ההתנהגות האנושיים.", words: [{en:"Color psychology",he:"פסיכולוגיית הצבע"},{en:"influences human emotions",he:"משפיעה על רגשות"},{en:"significantly",he:"משמעותית"}] },
+      { en:"Color psychology influences human emotions and behavior significantly.", he:"פסיכולוגיית הצבע משפיעה על רגשות והתנהגות אנושיים.", words:[{en:"Color psychology",he:"פסיכולוגיית צבע"},{en:"influences",he:"משפיעה"},{en:"emotions",he:"רגשות"}] },
     ],
   },
   weather: {
     beginner: [
-      { en: "Today is sunny and warm.", he: "היום שמשי וחם.", words: [{en:"Today is sunny",he:"היום שמשי"},{en:"and warm",he:"וחם"}] },
-      { en: "It is raining outside.", he: "גשם יורד בחוץ.", words: [{en:"It is raining",he:"גשם יורד"},{en:"outside",he:"בחוץ"}] },
-      { en: "I need my umbrella today.", he: "אני צריך מטריה היום.", words: [{en:"I need",he:"אני צריך"},{en:"my umbrella",he:"המטריה שלי"},{en:"today",he:"היום"}] },
-      { en: "The wind is very strong.", he: "הרוח מאוד חזקה.", words: [{en:"The wind",he:"הרוח"},{en:"is very strong",he:"מאוד חזקה"}] },
+      { en:"Today is sunny and warm.",      he:"היום שמשי וחם.",              words:[{en:"sunny",he:"שמשי"},{en:"warm",he:"חם"}] },
+      { en:"It is raining outside.",        he:"גשם יורד בחוץ.",             words:[{en:"raining",he:"גשם יורד"},{en:"outside",he:"בחוץ"}] },
+      { en:"I need my umbrella today.",     he:"אני צריך מטריה היום.",        words:[{en:"umbrella",he:"מטריה"},{en:"today",he:"היום"}] },
+      { en:"The wind is very strong.",      he:"הרוח מאוד חזקה.",            words:[{en:"wind",he:"רוח"},{en:"strong",he:"חזקה"}] },
     ],
     intermediate: [
-      { en: "The weather forecast says it will snow tomorrow.", he: "תחזית מזג האוויר אומרת שיהיה שלג מחר.", words: [{en:"The weather forecast",he:"תחזית מזג האוויר"},{en:"says it will snow",he:"אומרת שיהיה שלג"},{en:"tomorrow",he:"מחר"}] },
-      { en: "After the storm, there was a beautiful rainbow.", he: "אחרי הסערה הייתה קשת יפהפייה.", words: [{en:"After the storm",he:"אחרי הסערה"},{en:"there was a beautiful rainbow",he:"הייתה קשת יפהפייה"}] },
-      { en: "Temperatures drop significantly during winter nights.", he: "הטמפרטורות יורדות משמעותית בלילות החורף.", words: [{en:"Temperatures drop",he:"הטמפרטורות יורדות"},{en:"significantly",he:"משמעותית"},{en:"during winter nights",he:"בלילות החורף"}] },
+      { en:"The weather forecast says it will snow tomorrow.",  he:"תחזית מזג האוויר אומרת שיהיה שלג מחר.", words:[{en:"weather forecast",he:"תחזית מזג אוויר"},{en:"snow",he:"שלג"},{en:"tomorrow",he:"מחר"}] },
+      { en:"After the storm, there was a beautiful rainbow.",   he:"אחרי הסערה הייתה קשת יפהפייה.",         words:[{en:"storm",he:"סערה"},{en:"rainbow",he:"קשת"}] },
+      { en:"Temperatures drop significantly during winter nights.", he:"הטמפרטורות יורדות משמעותית בלילות החורף.", words:[{en:"Temperatures",he:"טמפרטורות"},{en:"drop",he:"יורדות"},{en:"winter nights",he:"לילות חורף"}] },
     ],
     advanced: [
-      { en: "Climate change is causing more extreme weather events worldwide.", he: "שינויי אקלים גורמים לאירועי מזג אוויר קיצוניים יותר ברחבי העולם.", words: [{en:"Climate change",he:"שינויי אקלים"},{en:"is causing more extreme",he:"גורם לאירועים קיצוניים יותר"},{en:"weather events worldwide",he:"ברחבי העולם"}] },
-      { en: "Meteorologists use advanced technology to predict weather patterns.", he: "מטאורולוגים משתמשים בטכנולוגיה מתקדמת לחיזוי דפוסי מזג האוויר.", words: [{en:"Meteorologists",he:"מטאורולוגים"},{en:"use advanced technology",he:"משתמשים בטכנולוגיה מתקדמת"},{en:"to predict weather patterns",he:"לחיזוי דפוסי מזג האוויר"}] },
+      { en:"Climate change is causing more extreme weather events worldwide.",         he:"שינויי אקלים גורמים לאירועי מזג אוויר קיצוניים יותר ברחבי העולם.", words:[{en:"Climate change",he:"שינויי אקלים"},{en:"extreme",he:"קיצוניים"},{en:"worldwide",he:"ברחבי העולם"}] },
+      { en:"Meteorologists use advanced technology to predict weather patterns.",      he:"מטאורולוגים משתמשים בטכנולוגיה מתקדמת לחיזוי דפוסי מזג האוויר.",  words:[{en:"Meteorologists",he:"מטאורולוגים"},{en:"predict",he:"לחזות"},{en:"weather patterns",he:"דפוסי מזג אוויר"}] },
     ],
   },
   travel: {
     beginner: [
-      { en: "I want to visit Paris one day.", he: "אני רוצה לבקר בפריז יום אחד.", words: [{en:"I want to visit",he:"אני רוצה לבקר"},{en:"Paris",he:"בפריז"},{en:"one day",he:"יום אחד"}] },
-      { en: "We take the train to the city.", he: "אנחנו לוקחים רכבת לעיר.", words: [{en:"We take the train",he:"אנחנו לוקחים רכבת"},{en:"to the city",he:"לעיר"}] },
-      { en: "My passport is in my bag.", he: "הדרכון שלי נמצא בתיק.", words: [{en:"My passport",he:"הדרכון שלי"},{en:"is in my bag",he:"נמצא בתיק"}] },
+      { en:"I want to visit Paris one day.", he:"אני רוצה לבקר בפריז יום אחד.", words:[{en:"visit",he:"לבקר"},{en:"Paris",he:"פריז"},{en:"one day",he:"יום אחד"}] },
+      { en:"We take the train to the city.",  he:"אנחנו לוקחים רכבת לעיר.",    words:[{en:"train",he:"רכבת"},{en:"city",he:"עיר"}] },
+      { en:"My passport is in my bag.",       he:"הדרכון שלי נמצא בתיק.",       words:[{en:"passport",he:"דרכון"},{en:"bag",he:"תיק"}] },
     ],
     intermediate: [
-      { en: "We booked a hotel near the beach for our vacation.", he: "הזמנו מלון ליד הים לחופשה שלנו.", words: [{en:"We booked a hotel",he:"הזמנו מלון"},{en:"near the beach",he:"ליד הים"},{en:"for our vacation",he:"לחופשה שלנו"}] },
-      { en: "The flight from Tel Aviv to London takes five hours.", he: "הטיסה מתל אביב ללונדון לוקחת חמש שעות.", words: [{en:"The flight",he:"הטיסה"},{en:"from Tel Aviv to London",he:"מתל אביב ללונדון"},{en:"takes five hours",he:"לוקחת חמש שעות"}] },
-      { en: "Traveling opens your mind to different cultures.", he: "טיולים פותחים את הנפש לתרבויות שונות.", words: [{en:"Traveling opens your mind",he:"טיולים פותחים את הנפש"},{en:"to different cultures",he:"לתרבויות שונות"}] },
+      { en:"We booked a hotel near the beach for our vacation.", he:"הזמנו מלון ליד הים לחופשה שלנו.",     words:[{en:"booked",he:"הזמנו"},{en:"hotel",he:"מלון"},{en:"vacation",he:"חופשה"}] },
+      { en:"The flight from Tel Aviv to London takes five hours.", he:"הטיסה מתל אביב ללונדון לוקחת חמש שעות.", words:[{en:"flight",he:"טיסה"},{en:"five hours",he:"חמש שעות"}] },
+      { en:"Traveling opens your mind to different cultures.",   he:"טיולים פותחים את הנפש לתרבויות שונות.", words:[{en:"Traveling",he:"טיולים"},{en:"cultures",he:"תרבויות"}] },
     ],
     advanced: [
-      { en: "Sustainable tourism aims to minimize environmental impact while benefiting local communities.", he: "תיירות בת קיימא שואפת למזער פגיעה סביבתית תוך תועלת לקהילות מקומיות.", words: [{en:"Sustainable tourism",he:"תיירות בת קיימא"},{en:"aims to minimize",he:"שואפת למזער"},{en:"environmental impact",he:"פגיעה סביבתית"}] },
+      { en:"Sustainable tourism aims to minimize environmental impact while benefiting local communities.", he:"תיירות בת קיימא שואפת למזער פגיעה סביבתית תוך תועלת לקהילות מקומיות.", words:[{en:"Sustainable tourism",he:"תיירות בת קיימא"},{en:"minimize",he:"למזער"},{en:"environmental impact",he:"פגיעה סביבתית"}] },
     ],
   },
   technology: {
     beginner: [
-      { en: "I use my phone every day.", he: "אני משתמש בטלפון שלי כל יום.", words: [{en:"I use my phone",he:"אני משתמש בטלפון"},{en:"every day",he:"כל יום"}] },
-      { en: "The computer is on the desk.", he: "המחשב נמצא על השולחן.", words: [{en:"The computer",he:"המחשב"},{en:"is on the desk",he:"נמצא על השולחן"}] },
-      { en: "I watch videos on the internet.", he: "אני צופה בסרטונים באינטרנט.", words: [{en:"I watch videos",he:"אני צופה בסרטונים"},{en:"on the internet",he:"באינטרנט"}] },
+      { en:"I use my phone every day.",        he:"אני משתמש בטלפון שלי כל יום.", words:[{en:"phone",he:"טלפון"},{en:"every day",he:"כל יום"}] },
+      { en:"The computer is on the desk.",     he:"המחשב נמצא על השולחן.",        words:[{en:"computer",he:"מחשב"},{en:"desk",he:"שולחן"}] },
+      { en:"I watch videos on the internet.",  he:"אני צופה בסרטונים באינטרנט.",  words:[{en:"watch videos",he:"צופה בסרטונים"},{en:"internet",he:"אינטרנט"}] },
     ],
     intermediate: [
-      { en: "Smartphones have changed the way we communicate.", he: "סמארטפונים שינו את הדרך שבה אנו מתקשרים.", words: [{en:"Smartphones",he:"סמארטפונים"},{en:"have changed the way",he:"שינו את הדרך"},{en:"we communicate",he:"שבה אנו מתקשרים"}] },
-      { en: "I learned to code using online tutorials.", he: "למדתי לתכנת בעזרת מדריכים מקוונים.", words: [{en:"I learned to code",he:"למדתי לתכנת"},{en:"using online tutorials",he:"בעזרת מדריכים מקוונים"}] },
-      { en: "The app stores your data in the cloud.", he: "האפליקציה שומרת את הנתונים שלך בענן.", words: [{en:"The app",he:"האפליקציה"},{en:"stores your data",he:"שומרת את הנתונים"},{en:"in the cloud",he:"בענן"}] },
+      { en:"Smartphones have changed the way we communicate.",  he:"סמארטפונים שינו את הדרך שבה אנו מתקשרים.", words:[{en:"Smartphones",he:"סמארטפונים"},{en:"communicate",he:"מתקשרים"}] },
+      { en:"I learned to code using online tutorials.",         he:"למדתי לתכנת בעזרת מדריכים מקוונים.",       words:[{en:"code",he:"לתכנת"},{en:"online tutorials",he:"מדריכים מקוונים"}] },
+      { en:"The app stores your data in the cloud.",            he:"האפליקציה שומרת את הנתונים שלך בענן.",     words:[{en:"app",he:"אפליקציה"},{en:"data",he:"נתונים"},{en:"cloud",he:"ענן"}] },
     ],
     advanced: [
-      { en: "Artificial intelligence is transforming industries across the globe.", he: "בינה מלאכותית משנה תעשיות ברחבי הגלובוס.", words: [{en:"Artificial intelligence",he:"בינה מלאכותית"},{en:"is transforming industries",he:"משנה תעשיות"},{en:"across the globe",he:"ברחבי הגלובוס"}] },
-      { en: "Cybersecurity threats require constant vigilance from organizations.", he: "איומי סייבר מחייבים ערנות מתמדת מארגונים.", words: [{en:"Cybersecurity threats",he:"איומי סייבר"},{en:"require constant vigilance",he:"מחייבים ערנות מתמדת"},{en:"from organizations",he:"מארגונים"}] },
-      { en: "Quantum computing promises to solve problems beyond current capabilities.", he: "מחשוב קוונטי מבטיח לפתור בעיות מעבר ליכולות הנוכחיות.", words: [{en:"Quantum computing",he:"מחשוב קוונטי"},{en:"promises to solve",he:"מבטיח לפתור"},{en:"problems beyond current capabilities",he:"מעבר ליכולות הנוכחיות"}] },
+      { en:"Artificial intelligence is transforming industries across the globe.",      he:"בינה מלאכותית משנה תעשיות ברחבי הגלובוס.",             words:[{en:"Artificial intelligence",he:"בינה מלאכותית"},{en:"transforming",he:"משנה"},{en:"industries",he:"תעשיות"}] },
+      { en:"Cybersecurity threats require constant vigilance from organizations.",      he:"איומי סייבר מחייבים ערנות מתמדת מארגונים.",            words:[{en:"Cybersecurity",he:"סייבר"},{en:"vigilance",he:"ערנות"},{en:"organizations",he:"ארגונים"}] },
+      { en:"Quantum computing promises to solve problems beyond current capabilities.", he:"מחשוב קוונטי מבטיח לפתור בעיות מעבר ליכולות הנוכחיות.", words:[{en:"Quantum computing",he:"מחשוב קוונטי"},{en:"capabilities",he:"יכולות"}] },
     ],
   },
   hobbies: {
     beginner: [
-      { en: "I love to read books in the evening.", he: "אני אוהב לקרוא ספרים בערב.", words: [{en:"I love to read books",he:"אני אוהב לקרוא ספרים"},{en:"in the evening",he:"בערב"}] },
-      { en: "My hobby is drawing cartoon characters.", he: "התחביב שלי הוא ציור דמויות קומיקס.", words: [{en:"My hobby is drawing",he:"התחביב שלי הוא ציור"},{en:"cartoon characters",he:"דמויות קומיקס"}] },
-      { en: "We play board games on weekends.", he: "אנחנו משחקים משחקי קופסה בסופי שבוע.", words: [{en:"We play board games",he:"אנחנו משחקים משחקי קופסה"},{en:"on weekends",he:"בסופי שבוע"}] },
+      { en:"I love to read books in the evening.",     he:"אני אוהב לקרוא ספרים בערב.",         words:[{en:"read books",he:"לקרוא ספרים"},{en:"evening",he:"ערב"}] },
+      { en:"My hobby is drawing cartoon characters.",  he:"התחביב שלי הוא ציור דמויות קומיקס.", words:[{en:"hobby",he:"תחביב"},{en:"drawing",he:"ציור"},{en:"cartoon",he:"קומיקס"}] },
+      { en:"We play board games on weekends.",         he:"אנחנו משחקים משחקי קופסה בסופי שבוע.", words:[{en:"board games",he:"משחקי קופסה"},{en:"weekends",he:"סופי שבוע"}] },
     ],
     intermediate: [
-      { en: "Photography helps me capture beautiful memories.", he: "צילום עוזר לי ללכוד זיכרונות יפים.", words: [{en:"Photography helps me",he:"צילום עוזר לי"},{en:"capture beautiful memories",he:"ללכוד זיכרונות יפים"}] },
-      { en: "Playing a musical instrument requires patience and practice.", he: "נגינה על כלי נגינה דורשת סבלנות ותרגול.", words: [{en:"Playing a musical instrument",he:"נגינה על כלי נגינה"},{en:"requires patience and practice",he:"דורשת סבלנות ותרגול"}] },
-      { en: "Gardening is a relaxing hobby that connects us to nature.", he: "גינון הוא תחביב מרגיע שמחבר אותנו לטבע.", words: [{en:"Gardening is a relaxing hobby",he:"גינון הוא תחביב מרגיע"},{en:"that connects us to nature",he:"שמחבר אותנו לטבע"}] },
+      { en:"Photography helps me capture beautiful memories.",         he:"צילום עוזר לי ללכוד זיכרונות יפים.",          words:[{en:"Photography",he:"צילום"},{en:"capture",he:"ללכוד"},{en:"memories",he:"זיכרונות"}] },
+      { en:"Playing a musical instrument requires patience and practice.", he:"נגינה על כלי נגינה דורשת סבלנות ותרגול.",    words:[{en:"musical instrument",he:"כלי נגינה"},{en:"patience",he:"סבלנות"},{en:"practice",he:"תרגול"}] },
+      { en:"Gardening is a relaxing hobby that connects us to nature.",  he:"גינון הוא תחביב מרגיע שמחבר אותנו לטבע.",   words:[{en:"Gardening",he:"גינון"},{en:"relaxing",he:"מרגיע"},{en:"nature",he:"טבע"}] },
     ],
     advanced: [
-      { en: "Creative hobbies such as writing and painting foster emotional expression.", he: "תחביבים יצירתיים כמו כתיבה וציור מטפחים ביטוי רגשי.", words: [{en:"Creative hobbies",he:"תחביבים יצירתיים"},{en:"foster emotional expression",he:"מטפחים ביטוי רגשי"}] },
+      { en:"Creative hobbies such as writing and painting foster emotional expression.", he:"תחביבים יצירתיים כמו כתיבה וציור מטפחים ביטוי רגשי.", words:[{en:"Creative hobbies",he:"תחביבים יצירתיים"},{en:"foster",he:"מטפחים"},{en:"emotional expression",he:"ביטוי רגשי"}] },
     ],
   },
   nature: {
     beginner: [
-      { en: "Trees are very tall and green.", he: "עצים גבוהים מאוד וירוקים.", words: [{en:"Trees",he:"עצים"},{en:"are very tall and green",he:"גבוהים מאוד וירוקים"}] },
-      { en: "The river flows through the forest.", he: "הנהר זורם דרך היער.", words: [{en:"The river",he:"הנהר"},{en:"flows through the forest",he:"זורם דרך היער"}] },
-      { en: "Flowers bloom in the spring.", he: "פרחים פורחים באביב.", words: [{en:"Flowers bloom",he:"פרחים פורחים"},{en:"in the spring",he:"באביב"}] },
+      { en:"Trees are very tall and green.",       he:"עצים גבוהים מאוד וירוקים.",    words:[{en:"Trees",he:"עצים"},{en:"tall",he:"גבוהים"},{en:"green",he:"ירוקים"}] },
+      { en:"The river flows through the forest.",  he:"הנהר זורם דרך היער.",          words:[{en:"river",he:"נהר"},{en:"flows",he:"זורם"},{en:"forest",he:"יער"}] },
+      { en:"Flowers bloom in the spring.",         he:"פרחים פורחים באביב.",          words:[{en:"Flowers",he:"פרחים"},{en:"bloom",he:"פורחים"},{en:"spring",he:"אביב"}] },
     ],
     intermediate: [
-      { en: "The desert is hot during the day and cold at night.", he: "המדבר חם ביום וקר בלילה.", words: [{en:"The desert is hot",he:"המדבר חם"},{en:"during the day",he:"ביום"},{en:"and cold at night",he:"וקר בלילה"}] },
-      { en: "Forests produce oxygen that all living things need.", he: "יערות מייצרים חמצן שכל יצור חי צריך.", words: [{en:"Forests produce oxygen",he:"יערות מייצרים חמצן"},{en:"that all living things need",he:"שכל יצור חי צריך"}] },
+      { en:"The desert is hot during the day and cold at night.",    he:"המדבר חם ביום וקר בלילה.",                   words:[{en:"desert",he:"מדבר"},{en:"hot",he:"חם"},{en:"cold at night",he:"קר בלילה"}] },
+      { en:"Forests produce oxygen that all living things need.",    he:"יערות מייצרים חמצן שכל יצור חי צריך.",      words:[{en:"Forests",he:"יערות"},{en:"produce oxygen",he:"מייצרים חמצן"},{en:"living things",he:"יצורים חיים"}] },
     ],
     advanced: [
-      { en: "Biodiversity is essential for maintaining healthy ecosystems.", he: "מגוון ביולוגי חיוני לשמירה על מערכות אקולוגיות בריאות.", words: [{en:"Biodiversity",he:"מגוון ביולוגי"},{en:"is essential for maintaining",he:"חיוני לשמירה על"},{en:"healthy ecosystems",he:"מערכות אקולוגיות בריאות"}] },
-      { en: "Deforestation threatens wildlife habitats and accelerates climate change.", he: "כריתת יערות מאיימת על בתי גידול של בעלי חיים ומאיצה שינויי אקלים.", words: [{en:"Deforestation",he:"כריתת יערות"},{en:"threatens wildlife habitats",he:"מאיימת על בתי גידול"},{en:"and accelerates climate change",he:"ומאיצה שינויי אקלים"}] },
+      { en:"Biodiversity is essential for maintaining healthy ecosystems.",            he:"מגוון ביולוגי חיוני לשמירה על מערכות אקולוגיות בריאות.", words:[{en:"Biodiversity",he:"מגוון ביולוגי"},{en:"ecosystems",he:"מערכות אקולוגיות"}] },
+      { en:"Deforestation threatens wildlife habitats and accelerates climate change.", he:"כריתת יערות מאיימת על בתי גידול ומאיצה שינויי אקלים.",   words:[{en:"Deforestation",he:"כריתת יערות"},{en:"habitats",he:"בתי גידול"},{en:"accelerates",he:"מאיצה"}] },
     ],
   },
   feelings: {
     beginner: [
-      { en: "I feel happy today.", he: "אני מרגיש שמח היום.", words: [{en:"I feel happy",he:"אני מרגיש שמח"},{en:"today",he:"היום"}] },
-      { en: "She is sad because she lost her toy.", he: "היא עצובה כי איבדה את הצעצוע.", words: [{en:"She is sad",he:"היא עצובה"},{en:"because she lost her toy",he:"כי איבדה את הצעצוע"}] },
-      { en: "I am excited about the birthday party.", he: "אני מתרגש מהמסיבת יום הולדת.", words: [{en:"I am excited",he:"אני מתרגש"},{en:"about the birthday party",he:"מהמסיבת יום הולדת"}] },
+      { en:"I feel happy today.",                            he:"אני מרגיש שמח היום.",                  words:[{en:"feel happy",he:"מרגיש שמח"},{en:"today",he:"היום"}] },
+      { en:"She is sad because she lost her toy.",           he:"היא עצובה כי איבדה את הצעצוע.",        words:[{en:"sad",he:"עצובה"},{en:"lost",he:"איבדה"},{en:"toy",he:"צעצוע"}] },
+      { en:"I am excited about the birthday party.",         he:"אני מתרגש מהמסיבת יום הולדת.",         words:[{en:"excited",he:"מתרגש"},{en:"birthday party",he:"מסיבת יום הולדת"}] },
     ],
     intermediate: [
-      { en: "I feel nervous before important exams.", he: "אני מרגיש עצבני לפני מבחנים חשובים.", words: [{en:"I feel nervous",he:"אני מרגיש עצבני"},{en:"before important exams",he:"לפני מבחנים חשובים"}] },
-      { en: "Sharing your feelings helps you feel better.", he: "שיתוף הרגשות שלך עוזר לך להרגיש טוב יותר.", words: [{en:"Sharing your feelings",he:"שיתוף הרגשות שלך"},{en:"helps you feel better",he:"עוזר לך להרגיש טוב יותר"}] },
-      { en: "Music can change your mood in just a few seconds.", he: "מוזיקה יכולה לשנות את מ気分שלך תוך שניות ספורות.", words: [{en:"Music can change your mood",he:"מוזיקה יכולה לשנות את מצב רוחך"},{en:"in just a few seconds",he:"תוך שניות ספורות"}] },
+      { en:"I feel nervous before important exams.",         he:"אני מרגיש עצבני לפני מבחנים חשובים.",  words:[{en:"nervous",he:"עצבני"},{en:"important exams",he:"מבחנים חשובים"}] },
+      { en:"Sharing your feelings helps you feel better.",   he:"שיתוף הרגשות שלך עוזר לך להרגיש טוב יותר.", words:[{en:"Sharing",he:"שיתוף"},{en:"feelings",he:"רגשות"},{en:"feel better",he:"להרגיש טוב יותר"}] },
+      { en:"Music can change your mood in just a few seconds.", he:"מוזיקה יכולה לשנות את מצב רוחך תוך שניות.", words:[{en:"Music",he:"מוזיקה"},{en:"mood",he:"מצב רוח"},{en:"seconds",he:"שניות"}] },
     ],
     advanced: [
-      { en: "Emotional intelligence involves understanding and managing your own emotions effectively.", he: "אינטליגנציה רגשית כוללת הבנה וניהול יעיל של רגשותיך.", words: [{en:"Emotional intelligence",he:"אינטליגנציה רגשית"},{en:"involves understanding",he:"כוללת הבנה"},{en:"and managing emotions effectively",he:"וניהול רגשות ביעילות"}] },
-      { en: "Practicing gratitude daily has been shown to improve mental well-being.", he: "תרגול כפיות טובה יומי הוכח כמשפר את הרווחה הנפשית.", words: [{en:"Practicing gratitude daily",he:"תרגול כפיות טובה יומי"},{en:"has been shown to improve",he:"הוכח כמשפר"},{en:"mental well-being",he:"רווחה נפשית"}] },
+      { en:"Emotional intelligence involves understanding and managing your own emotions effectively.", he:"אינטליגנציה רגשית כוללת הבנה וניהול יעיל של רגשותיך.", words:[{en:"Emotional intelligence",he:"אינטליגנציה רגשית"},{en:"managing",he:"ניהול"},{en:"effectively",he:"ביעילות"}] },
+      { en:"Practicing gratitude daily has been shown to improve mental well-being.",               he:"תרגול כפיות טובה יומי הוכח כמשפר את הרווחה הנפשית.",  words:[{en:"gratitude",he:"כפיות טובה"},{en:"improve",he:"לשפר"},{en:"well-being",he:"רווחה"}] },
     ],
   },
 };
 
 const TOPIC_NAMES = {
-  animals: "🐾 חיות",
-  food: "🍕 אוכל",
-  school: "🎒 בית ספר",
-  sports: "⚽ ספורט",
-  family: "👨‍👩‍👧 משפחה",
-  colors: "🎨 צבעים",
-  weather: "🌤️ מזג אוויר",
-  travel: "✈️ נסיעות",
-  technology: "💻 טכנולוגיה",
-  hobbies: "🎮 תחביבים",
-  nature: "🌿 טבע",
-  feelings: "💭 רגשות",
+  animals:"🐾 חיות", food:"🍕 אוכל", school:"🎒 בית ספר", sports:"⚽ ספורט",
+  family:"👨‍👩‍👧 משפחה", colors:"🎨 צבעים", weather:"🌤️ מזג אוויר", travel:"✈️ נסיעות",
+  technology:"💻 טכנולוגיה", hobbies:"🎮 תחביבים", nature:"🌿 טבע", feelings:"💭 רגשות",
 };
-
-const DIFFICULTY_NAMES = { beginner: "מתחיל", intermediate: "בינוני", advanced: "מתקדם" };
 
 /* ==========================================================
    STATE
    ========================================================== */
 let state = {
+  mode: "en",           // "en" = עברית→אנגלית | "he" = אנגלית→עברית
   difficulty: "beginner",
   topic: "animals",
   currentSentence: null,
@@ -816,63 +756,82 @@ let state = {
   translationVisible: false,
   sentenceDone: false,
   totalStars: 0,
-  usedSentences: {}, // { "topic_difficulty": [indices used] }
+  usedSentences: {},
   recognition: null,
   isListening: false,
   progressTimer: null,
+  _lastFinal: "",
 };
 
 /* ==========================================================
    INIT
    ========================================================== */
 function init() {
-  // Load from localStorage
-  const saved = localStorage.getItem("speechTrainer_v2");
+  const saved = localStorage.getItem("speechTrainer_v3");
   if (saved) {
     try {
-      const data = JSON.parse(saved);
-      state.totalStars = data.totalStars || 0;
-      state.usedSentences = data.usedSentences || {};
-      state.topic = data.lastTopic || "animals";
-      state.difficulty = data.lastDifficulty || "beginner";
+      const d = JSON.parse(saved);
+      state.totalStars   = d.totalStars   || 0;
+      state.usedSentences= d.usedSentences|| {};
+      state.topic        = d.lastTopic    || "animals";
+      state.difficulty   = d.lastDifficulty || "beginner";
+      state.mode         = d.lastMode     || "en";
     } catch(e) {}
   }
 
-  // Restore topic select
   document.getElementById("topic-select").value = state.topic;
-
-  // Restore difficulty pills
-  document.querySelectorAll(".pill").forEach(p => {
-    p.classList.toggle("selected", p.dataset.level === state.difficulty);
-  });
-
-  // Update total stars display
-  updateTotalStarsDisplay();
-
-  // Attach pill listeners
-  document.querySelectorAll(".pill").forEach(pill => {
+  document.querySelectorAll(".pill").forEach(p =>
+    p.classList.toggle("selected", p.dataset.level === state.difficulty));
+  document.querySelectorAll(".pill").forEach(pill =>
     pill.addEventListener("click", () => {
       document.querySelectorAll(".pill").forEach(p => p.classList.remove("selected"));
       pill.classList.add("selected");
       state.difficulty = pill.dataset.level;
       saveData();
-    });
+    })
+  );
+  document.getElementById("topic-select").addEventListener("change", e => {
+    state.topic = e.target.value; saveData();
   });
 
-  // Topic change
-  document.getElementById("topic-select").addEventListener("change", (e) => {
-    state.topic = e.target.value;
-    saveData();
-  });
+  applyModeUI(state.mode);
+  updateTotalStarsDisplay();
 }
 
 function saveData() {
-  localStorage.setItem("speechTrainer_v2", JSON.stringify({
+  localStorage.setItem("speechTrainer_v3", JSON.stringify({
     totalStars: state.totalStars,
     usedSentences: state.usedSentences,
     lastTopic: state.topic,
     lastDifficulty: state.difficulty,
+    lastMode: state.mode,
   }));
+}
+
+/* ==========================================================
+   MODE SWITCH
+   ========================================================== */
+function switchMode(mode) {
+  if (state.isListening) stopListening();
+  state.mode = mode;
+  saveData();
+  applyModeUI(mode);
+  showScreen("screen-settings");
+}
+
+function applyModeUI(mode) {
+  const tabEn = document.getElementById("tab-en");
+  const tabHe = document.getElementById("tab-he");
+  tabEn.className = "mode-tab" + (mode === "en" ? " active-en" : "");
+  tabHe.className = "mode-tab" + (mode === "he" ? " active-he" : "");
+
+  if (mode === "en") {
+    document.getElementById("settings-title").textContent     = "✨ תרגום לאנגלית!";
+    document.getElementById("settings-subtitle").textContent  = "ראה משפט עברי – תרגם לאנגלית בקול 🎤";
+  } else {
+    document.getElementById("settings-title").textContent     = "✨ תרגום לעברית!";
+    document.getElementById("settings-subtitle").textContent  = "ראה משפט אנגלי – תרגם לעברית בקול 🎤";
+  }
 }
 
 /* ==========================================================
@@ -882,10 +841,7 @@ function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-function goSettings() {
-  stopListening();
-  showScreen("screen-settings");
-}
+function goSettings() { stopListening(); showScreen("screen-settings"); }
 
 /* ==========================================================
    SENTENCE LOGIC
@@ -893,19 +849,10 @@ function goSettings() {
 function getNextSentence(topic, difficulty) {
   const pool = (SENTENCES[topic] && SENTENCES[topic][difficulty]) || [];
   if (!pool.length) return null;
-
   const key = `${topic}_${difficulty}`;
   if (!state.usedSentences[key]) state.usedSentences[key] = [];
-
-  // If all used, reset
-  if (state.usedSentences[key].length >= pool.length) {
-    state.usedSentences[key] = [];
-  }
-
-  const available = pool
-    .map((s, i) => i)
-    .filter(i => !state.usedSentences[key].includes(i));
-
+  if (state.usedSentences[key].length >= pool.length) state.usedSentences[key] = [];
+  const available = pool.map((_,i)=>i).filter(i => !state.usedSentences[key].includes(i));
   const idx = available[Math.floor(Math.random() * available.length)];
   state.usedSentences[key].push(idx);
   saveData();
@@ -913,83 +860,101 @@ function getNextSentence(topic, difficulty) {
 }
 
 function createSentence() {
-  const topic = document.getElementById("topic-select").value;
-  state.topic = topic;
+  state.topic = document.getElementById("topic-select").value;
 
-  // Check browser support
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    const errEl = document.getElementById("settings-error");
-    errEl.textContent = "⚠️ הדפדפן שלך אינו תומך בזיהוי דיבור. נסה Google Chrome.";
-    errEl.classList.add("visible");
+    showSettingsError("⚠️ הדפדפן אינו תומך בזיהוי דיבור. נסה Google Chrome.");
     return;
   }
-
   const sentence = getNextSentence(state.topic, state.difficulty);
-  if (!sentence) {
-    const errEl = document.getElementById("settings-error");
-    errEl.textContent = "⚠️ לא נמצאו משפטים לנושא ורמה זו. נסה שילוב אחר.";
-    errEl.classList.add("visible");
-    return;
-  }
-  document.getElementById("settings-error").classList.remove("visible");
+  if (!sentence) { showSettingsError("⚠️ לא נמצאו משפטים לנושא ורמה זו."); return; }
+  hideSettingsError();
 
-  state.currentSentence = sentence;
-  state.currentStars = 5;
-  state.hintUsed = false;
-  state.attemptCount = 0;
-  state.hintIndex = 0;
+  state.currentSentence  = sentence;
+  state.currentStars     = 5;
+  state.hintUsed         = false;
+  state.attemptCount     = 0;
+  state.hintIndex        = 0;
   state.translationVisible = false;
-  state.sentenceDone = false;
+  state.sentenceDone     = false;
 
-  // Populate practice screen
-  document.getElementById("sentence-en").textContent = sentence.en;
-  document.getElementById("topic-badge").textContent = TOPIC_NAMES[topic] || topic;
-  updateStarsUI();
-  updateAttemptInfo();
+  const isEN = state.mode === "en"; // עברית→אנגלית
+  const displayText = isEN ? sentence.he : sentence.en;
 
-  // Reset UI
-  resetTranscript();
-  hideFeedback();
-  document.getElementById("result-banner").classList.remove("visible");
-  document.getElementById("translation-box").classList.remove("visible");
-  document.getElementById("translation-box").textContent = "";
+  // Sentence card styling
+  const card = document.getElementById("sentence-card");
+  card.className = "sentence-card" + (isEN ? "" : " mode-he");
+
+  const badge = document.getElementById("topic-badge");
+  badge.textContent = TOPIC_NAMES[state.topic] || state.topic;
+  badge.className = "topic-badge" + (isEN ? "" : " mode-he");
+
+  const modeLabel = document.getElementById("mode-label");
+  modeLabel.textContent = isEN ? "תרגם לאנגלית 🇬🇧" : "תרגם לעברית 🇮🇱";
+  modeLabel.className = "mode-label" + (isEN ? "" : " mode-he");
+
+  const sentenceEl = document.getElementById("sentence-main");
+  sentenceEl.textContent = displayText;
+  sentenceEl.className = "sentence-main " + (isEN ? "rtl" : "ltr");
+
+  // Mic button color
+  const mic = document.getElementById("btn-mic");
+  mic.className = "btn btn-mic" + (isEN ? "" : " mode-he");
+  mic.textContent = isEN ? "🎤 דבר באנגלית" : "🎤 תרגם לעברית בקול";
+  mic.disabled = false;
+
+  // Progress bar color
+  document.getElementById("progress-bar").className = "progress-bar" + (isEN ? "" : " mode-he");
+
+  // Transcript direction
+  const transcript = document.getElementById("transcript-area");
+  transcript.className = "transcript-area empty " + (isEN ? "ltr" : "rtl") + (isEN ? "" : " mode-he");
+  transcript.textContent = isEN ? "Your English translation will appear here..." : "התרגום שלך לעברית יופיע כאן...";
+
+  // Translation box direction
+  const tbox = document.getElementById("translation-box");
+  tbox.className = "translation-box " + (isEN ? "ltr" : "rtl");
+  tbox.classList.remove("visible");
+  tbox.textContent = "";
+
+  document.getElementById("btn-translate").textContent = "🔤 הצג תרגום";
   document.getElementById("btn-hint").classList.remove("hint-used");
   document.getElementById("btn-hint").textContent = "💡 רמז";
-  document.getElementById("btn-translate").textContent = "🔤 הצג תרגום מלא";
+  document.getElementById("result-banner").classList.remove("visible");
+  document.getElementById("feedback-area").className = "feedback-area";
   document.getElementById("progress-bar").style.width = "0%";
-  document.getElementById("progress-label").textContent = "קרא את המשפט ותרגם אותו לעברית בקול";
-  document.getElementById("btn-mic").classList.remove("listening");
-  document.getElementById("btn-mic").textContent = "🎤 דבר עכשיו";
-  document.getElementById("btn-mic").disabled = false;
+  document.getElementById("progress-label").textContent = isEN
+    ? "לחץ ותרגם לאנגלית בקול"
+    : "לחץ ותרגם לעברית בקול";
 
+  updateStarsUI();
+  updateAttemptInfo();
   showScreen("screen-practice");
 }
 
 /* ==========================================================
-   STARS UI
+   STARS
    ========================================================== */
 function updateStarsUI() {
-  const container = document.getElementById("sentence-stars");
-  container.innerHTML = "";
+  const c = document.getElementById("sentence-stars");
+  c.innerHTML = "";
   for (let i = 0; i < 5; i++) {
-    const star = document.createElement("span");
-    star.className = "star " + (i < state.currentStars ? "filled" : "empty");
-    star.textContent = i < state.currentStars ? "⭐" : "☆";
-    container.appendChild(star);
+    const s = document.createElement("span");
+    s.className = "star " + (i < state.currentStars ? "filled" : "empty");
+    s.textContent = i < state.currentStars ? "⭐" : "☆";
+    c.appendChild(s);
   }
 }
-
-function setStars(n, animate = false) {
+function setStars(n, animate=false) {
   const old = state.currentStars;
   state.currentStars = Math.max(1, Math.min(5, n));
   updateStarsUI();
   if (animate && state.currentStars < old) {
-    // Flash the stars
-    const stars = document.querySelectorAll("#sentence-stars .star");
-    stars.forEach(s => { s.classList.add("bounce"); setTimeout(() => s.classList.remove("bounce"), 400); });
+    document.querySelectorAll("#sentence-stars .star").forEach(s => {
+      s.classList.add("bounce"); setTimeout(()=>s.classList.remove("bounce"), 400);
+    });
   }
 }
-
 function updateTotalStarsDisplay() {
   document.getElementById("total-stars-num").textContent = state.totalStars;
 }
@@ -999,41 +964,40 @@ function updateTotalStarsDisplay() {
    ========================================================== */
 function showHint() {
   if (state.sentenceDone) return;
-  const btn = document.getElementById("btn-hint");
-
-  // Deduct stars on first hint use
   if (!state.hintUsed) {
     state.hintUsed = true;
     setStars(state.currentStars - 2, true);
+    const btn = document.getElementById("btn-hint");
     btn.classList.add("hint-used");
     btn.textContent = "💡 רמז נוסף";
   }
-
   const words = state.currentSentence.words;
   if (!words || !words.length) return;
-
   const word = words[state.hintIndex % words.length];
   state.hintIndex++;
 
+  const isEN = state.mode === "en";
   const feedback = document.getElementById("feedback-area");
   feedback.className = "feedback-area hint";
-  feedback.innerHTML = `
-    <strong>💡 רמז (מילה ${state.hintIndex} מתוך ${words.length}):</strong><br>
-    <span class="hint-word-chip">${word.en} <span class="he">= ${word.he}</span></span>
-  `;
+  // EN mode: show he→en  |  HE mode: show en→he
+  const chipHTML = isEN
+    ? `<span class="hint-word-chip"><span class="he">${word.he}</span> = <span class="en">${word.en}</span></span>`
+    : `<span class="hint-word-chip"><span class="en">${word.en}</span> = <span class="he">${word.he}</span></span>`;
+  feedback.innerHTML = `<strong>💡 רמז (${state.hintIndex}/${words.length}):</strong><br>${chipHTML}`;
 }
 
 function toggleTranslation() {
   state.translationVisible = !state.translationVisible;
   const box = document.getElementById("translation-box");
   const btn = document.getElementById("btn-translate");
+  const isEN = state.mode === "en";
   if (state.translationVisible) {
-    box.textContent = "🇮🇱 " + state.currentSentence.he;
+    box.textContent = isEN ? "🇬🇧 " + state.currentSentence.en : "🇮🇱 " + state.currentSentence.he;
     box.classList.add("visible");
     btn.textContent = "🙈 הסתר תרגום";
   } else {
     box.classList.remove("visible");
-    btn.textContent = "🔤 הצג תרגום מלא";
+    btn.textContent = "🔤 הצג תרגום";
   }
 }
 
@@ -1041,59 +1005,51 @@ function toggleTranslation() {
    SPEECH RECOGNITION
    ========================================================== */
 function toggleListening() {
-  if (state.isListening) {
-    stopListening();
-  } else {
-    startListening();
-  }
+  if (state.isListening) stopListening(); else startListening();
 }
 
 function startListening() {
   if (state.sentenceDone) return;
-
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError("הדפדפן לא תומך בזיהוי דיבור"); return; }
+  if (!SR) { showFeedbackError("הדפדפן לא תומך בזיהוי דיבור"); return; }
 
-  // Increment attempt
   state.attemptCount++;
-  if (state.attemptCount > 2) {
-    setStars(state.currentStars - 2, true);
-  }
+  if (state.attemptCount > 2) setStars(state.currentStars - 2, true);
   updateAttemptInfo();
 
   state.recognition = new SR();
-  state.recognition.lang = "he-IL";  // Hebrew recognition – student translates
+  // EN mode → student speaks English | HE mode → student speaks Hebrew
+  state.recognition.lang = state.mode === "en" ? "en-US" : "he-IL";
   state.recognition.interimResults = true;
   state.recognition.maxAlternatives = 3;
   state.recognition.continuous = false;
 
-  resetTranscript();
-  hideFeedback();
+  const transcript = document.getElementById("transcript-area");
+  transcript.textContent = state.mode === "en"
+    ? "Your English translation will appear here..."
+    : "התרגום שלך לעברית יופיע כאן...";
+  transcript.classList.add("empty");
+  document.getElementById("feedback-area").className = "feedback-area";
 
-  // UI → listening state
-  const btn = document.getElementById("btn-mic");
-  btn.classList.add("listening");
-  btn.textContent = "🔴 מקשיב...";
+  const mic = document.getElementById("btn-mic");
+  mic.classList.add("listening");
+  mic.textContent = "🔴 מקשיב...";
   state.isListening = true;
 
-  // Progress bar – 5 seconds
   let elapsed = 0;
-  const progressBar = document.getElementById("progress-bar");
-  const progressLabel = document.getElementById("progress-label");
-  progressBar.style.width = "0%";
-  progressLabel.textContent = "⏱️ 5 שניות...";
+  const bar = document.getElementById("progress-bar");
+  const label = document.getElementById("progress-label");
+  bar.style.width = "0%";
+  label.textContent = "⏱️ 5 שניות...";
 
   state.progressTimer = setInterval(() => {
     elapsed += 100;
-    const pct = Math.min((elapsed / 5000) * 100, 100);
-    progressBar.style.width = pct + "%";
-    const remaining = Math.max(0, Math.ceil((5000 - elapsed) / 1000));
-    progressLabel.textContent = remaining > 0 ? `⏱️ ${remaining} שניות...` : "⏹️ מעבד...";
+    bar.style.width = Math.min((elapsed/5000)*100, 100) + "%";
+    const rem = Math.max(0, Math.ceil((5000-elapsed)/1000));
+    label.textContent = rem > 0 ? `⏱️ ${rem} שניות...` : "⏹️ מעבד...";
     if (elapsed >= 5000) {
       clearInterval(state.progressTimer);
-      if (state.isListening && state.recognition) {
-        state.recognition.stop();
-      }
+      if (state.isListening && state.recognition) state.recognition.stop();
     }
   }, 100);
 
@@ -1103,58 +1059,49 @@ function startListening() {
       if (event.results[i].isFinal) final += event.results[i][0].transcript;
       else interim += event.results[i][0].transcript;
     }
-    const transcriptArea = document.getElementById("transcript-area");
-    transcriptArea.textContent = final || interim;
-    transcriptArea.classList.remove("empty");
-    if (final) {
-      state._lastFinal = final;
-    }
+    transcript.textContent = final || interim;
+    transcript.classList.remove("empty");
+    if (final) state._lastFinal = final;
   };
 
   state.recognition.onerror = (e) => {
     clearInterval(state.progressTimer);
     stopListeningUI();
-    if (e.error === "not-allowed" || e.error === "permission-denied") {
-      showError("❌ אנא אפשר גישה למיקרופון בדפדפן.");
-    } else if (e.error === "no-speech") {
-      showError("🤫 לא זיהינו דיבור. נסה שוב!");
-    } else {
-      showError("⚠️ שגיאה בזיהוי דיבור: " + e.error);
-    }
+    if (e.error === "not-allowed" || e.error === "permission-denied")
+      showFeedbackError("❌ אנא אפשר גישה למיקרופון בדפדפן.");
+    else if (e.error === "no-speech")
+      showFeedbackError("🤫 לא זיהינו דיבור. נסה שוב!");
+    else
+      showFeedbackError("⚠️ שגיאה בזיהוי: " + e.error);
   };
 
   state.recognition.onend = () => {
     clearInterval(state.progressTimer);
     stopListeningUI();
-    const transcript = state._lastFinal || document.getElementById("transcript-area").textContent;
-    if (transcript && transcript.trim()) {
-      evaluateSpeech(transcript.trim());
-    }
+    const t = state._lastFinal || document.getElementById("transcript-area").textContent;
+    if (t && t.trim()) evaluateSpeech(t.trim());
     state._lastFinal = "";
   };
 
-  try {
-    state.recognition.start();
-  } catch(e) {
-    clearInterval(state.progressTimer);
-    stopListeningUI();
-    showError("⚠️ לא ניתן להפעיל מיקרופון.");
-  }
+  try { state.recognition.start(); }
+  catch(e) { clearInterval(state.progressTimer); stopListeningUI(); showFeedbackError("⚠️ לא ניתן להפעיל מיקרופון."); }
 }
 
 function stopListening() {
-  if (state.recognition) {
-    try { state.recognition.stop(); } catch(e) {}
-  }
+  if (state.recognition) { try { state.recognition.stop(); } catch(e) {} }
   clearInterval(state.progressTimer);
   stopListeningUI();
 }
 
 function stopListeningUI() {
   state.isListening = false;
-  const btn = document.getElementById("btn-mic");
-  btn.classList.remove("listening");
-  btn.textContent = state.sentenceDone ? "✅ הצלחת!" : "🎤 נסה שוב";
+  const isEN = state.mode === "en";
+  const mic = document.getElementById("btn-mic");
+  mic.classList.remove("listening");
+  if (!state.sentenceDone) {
+    mic.className = "btn btn-mic" + (isEN ? "" : " mode-he");
+    mic.textContent = isEN ? "🎤 דבר באנגלית" : "🎤 תרגם לעברית בקול";
+  }
   document.getElementById("progress-bar").style.width = "0%";
   document.getElementById("progress-label").textContent = state.sentenceDone ? "" : "לחץ שוב כדי לנסות";
 }
@@ -1167,20 +1114,13 @@ function updateAttemptInfo() {
    EVALUATION
    ========================================================== */
 function normalize(s) {
-  return s.toLowerCase()
-    .replace(/[.,!?;:'"-]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return s.toLowerCase().replace(/[.,!?;:'"״-]/g,"").replace(/\s+/g," ").trim();
 }
 
 function calculateSimilarity(a, b) {
   a = normalize(a); b = normalize(b);
   if (a === b) return 1.0;
-
-  const wordsA = a.split(" ");
-  const wordsB = b.split(" ");
-  const setA = new Set(wordsA);
-  const setB = new Set(wordsB);
+  const setA = new Set(a.split(" ")), setB = new Set(b.split(" "));
   let intersection = 0;
   setA.forEach(w => { if (setB.has(w)) intersection++; });
   const union = new Set([...setA, ...setB]).size;
@@ -1188,8 +1128,12 @@ function calculateSimilarity(a, b) {
 }
 
 function evaluateSpeech(transcript) {
-  const target = state.currentSentence.he;   // ← השוואה לתרגום העברי
+  const isEN = state.mode === "en";
+  // EN mode: compare spoken English to sentence.en
+  // HE mode: compare spoken Hebrew to sentence.he
+  const target = isEN ? state.currentSentence.en : state.currentSentence.he;
   const sim = calculateSimilarity(transcript, target);
+
   const transcriptEl = document.getElementById("transcript-area");
   transcriptEl.textContent = transcript;
   transcriptEl.classList.remove("empty");
@@ -1197,70 +1141,58 @@ function evaluateSpeech(transcript) {
   const feedback = document.getElementById("feedback-area");
 
   if (sim >= 0.75) {
-    // SUCCESS!
     state.sentenceDone = true;
     state.totalStars += state.currentStars;
     saveData();
     updateTotalStarsDisplay();
 
     feedback.className = "feedback-area success";
-
-    const messages = [
-      "🎉 מעולה! ביצעת זאת בצורה מושלמת!",
-      "⭐ כל הכבוד! הגייה נהדרת!",
-      "🚀 נפלא! אנגלית ברמה גבוהה!",
-      "🏆 מדהים! המשך כך!",
+    const msgs = [
+      "🎉 מעולה! תרגום מושלם!",
+      "⭐ כל הכבוד! עשית זאת!",
+      "🚀 נפלא! המשך כך!",
+      "🏆 מדהים! ממש חכם!",
       "💪 פנטסטי! שמעתי כל מילה!",
     ];
-    feedback.innerHTML = `${messages[Math.floor(Math.random() * messages.length)]}<br><small>דמיון: ${Math.round(sim * 100)}%</small>`;
+    feedback.innerHTML = `${msgs[Math.floor(Math.random()*msgs.length)]}<br><small>דיוק: ${Math.round(sim*100)}%</small>`;
 
-    // Show result banner
     const banner = document.getElementById("result-banner");
     banner.classList.add("visible");
-    document.getElementById("result-title").textContent = sim >= 0.95 ? "שלם! Perfect! 🌟" : "כל הכבוד! Well done! 🎊";
+    document.getElementById("result-title").textContent = sim >= 0.95 ? "מושלם! 🌟" : "כל הכבוד! 🎊";
     document.getElementById("result-stars-display").textContent = "⭐".repeat(state.currentStars);
     document.getElementById("result-msg").textContent = `קיבלת ${state.currentStars} כוכבים! סך הכל: ${state.totalStars} כוכבים.`;
 
-    // Disable mic
-    const btn = document.getElementById("btn-mic");
-    btn.textContent = "✅ הצלחת!";
-    btn.disabled = true;
-    btn.classList.remove("listening");
+    const mic = document.getElementById("btn-mic");
+    mic.textContent = "✅ הצלחת!";
+    mic.disabled = true;
+    mic.classList.remove("listening");
 
     launchConfetti();
-
-    // מעבר אוטומטי למשפט הבא אחרי 2.5 שניות
     setTimeout(() => createSentence(), 2500);
 
   } else if (sim >= 0.45) {
     feedback.className = "feedback-area hint";
-    feedback.innerHTML = `
-      🔄 כמעט! דמיון: ${Math.round(sim * 100)}%<br>
-      <small>נסה שוב – שים לב לכל מילה</small>
-    `;
+    feedback.innerHTML = `🔄 כמעט! דיוק: ${Math.round(sim*100)}%<br><small>נסה שוב – שים לב לכל מילה</small>`;
   } else {
     feedback.className = "feedback-area error";
-    feedback.innerHTML = `
-      😅 לא בדיוק... דמיון: ${Math.round(sim * 100)}%<br>
-      <small>נסה שוב! תוכל גם ללחוץ על 💡 רמז</small>
-    `;
+    feedback.innerHTML = `😅 לא בדיוק... דיוק: ${Math.round(sim*100)}%<br><small>נסה שוב! תוכל גם ללחוץ על 💡 רמז</small>`;
   }
 }
 
-function resetTranscript() {
-  const el = document.getElementById("transcript-area");
-  el.textContent = "מה שתגיד יופיע כאן...";
-  el.classList.add("empty");
+/* ==========================================================
+   HELPERS
+   ========================================================== */
+function showFeedbackError(msg) {
+  const f = document.getElementById("feedback-area");
+  f.className = "feedback-area error";
+  f.textContent = msg;
 }
-
-function hideFeedback() {
-  document.getElementById("feedback-area").className = "feedback-area";
+function showSettingsError(msg) {
+  const e = document.getElementById("settings-error");
+  e.textContent = msg; e.classList.add("visible");
 }
-
-function showError(msg) {
-  const feedback = document.getElementById("feedback-area");
-  feedback.className = "feedback-area error";
-  feedback.textContent = msg;
+function hideSettingsError() {
+  document.getElementById("settings-error").classList.remove("visible");
 }
 
 /* ==========================================================
@@ -1270,33 +1202,23 @@ function launchConfetti() {
   const container = document.getElementById("confetti-container");
   container.innerHTML = "";
   const colors = ["#7C3AED","#A78BFA","#EC4899","#F9A8D4","#0D9488","#5EEAD4","#FCD34D","#FB923C","#34D399","#60A5FA"];
-
   for (let i = 0; i < 90; i++) {
     const c = document.createElement("div");
     c.className = "confetto";
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    const x = Math.random() * 100;
-    const delay = Math.random() * 1.2;
-    const dur = 2 + Math.random() * 1.5;
     const size = 7 + Math.random() * 10;
-    const rotate = Math.random() > 0.5 ? "2px" : "50%";
-
     c.style.cssText = `
-      left: ${x}vw;
-      background: ${color};
-      width: ${size}px; height: ${size}px;
-      border-radius: ${rotate};
-      animation-duration: ${dur}s;
-      animation-delay: ${delay}s;
+      left:${Math.random()*100}vw;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${size}px; height:${size}px;
+      border-radius:${Math.random()>.5?"2px":"50%"};
+      animation-duration:${2+Math.random()*1.5}s;
+      animation-delay:${Math.random()*1.2}s;
     `;
     container.appendChild(c);
   }
   setTimeout(() => { container.innerHTML = ""; }, 4500);
 }
 
-/* ==========================================================
-   BOOT
-   ========================================================== */
 document.addEventListener("DOMContentLoaded", init);
 </script>
 </body>
