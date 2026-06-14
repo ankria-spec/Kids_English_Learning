@@ -391,7 +391,148 @@
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
 
-  @media (max-height: 700px) { #app { padding-top: 12px; } .card { padding: 20px 18px; } }
+  .mode-tab.active-shop {
+    background: linear-gradient(135deg, rgba(236,72,153,0.35), rgba(251,207,232,0.15));
+    color: var(--pink-light);
+    box-shadow: 0 0 20px rgba(236,72,153,0.25);
+    border: 1px solid rgba(236,72,153,0.3);
+  }
+
+  /* ===== SHOP SCREEN ===== */
+  .shop-header-card {
+    width: 100%; max-width: 640px;
+    background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(124,58,237,0.15));
+    border: 1.5px solid rgba(236,72,153,0.3);
+    border-radius: var(--radius); padding: 20px 24px;
+    text-align: center; box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+  }
+  .shop-title {
+    font-size: 1.5rem; font-weight: 800;
+    background: linear-gradient(120deg, #F0ABFC, #F9A8D4, #FCD34D);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text; filter: brightness(1.15);
+    margin-bottom: 4px;
+  }
+  .shop-balance {
+    font-size: 1rem; color: var(--text-muted); margin-top: 6px;
+  }
+  .shop-balance strong {
+    color: #FCD34D; font-size: 1.2rem;
+  }
+
+  .cards-grid {
+    width: 100%; max-width: 640px;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .card-slot {
+    aspect-ratio: 2/3;
+    border-radius: 14px;
+    border: 2px solid var(--glass-border);
+    background: rgba(255,255,255,0.05);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; transition: all .22s;
+    overflow: hidden; position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card-slot:hover { border-color: var(--pink); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(236,72,153,0.3); }
+
+  .card-slot.locked {
+    cursor: default;
+    background: rgba(255,255,255,0.03);
+  }
+  .card-slot.locked:hover { transform: none; box-shadow: none; border-color: var(--glass-border); }
+
+  .card-slot img {
+    width: 100%; height: 100%; object-fit: cover;
+    border-radius: 12px;
+    transition: opacity .2s;
+  }
+
+  .card-slot .lock-icon {
+    font-size: 2rem; opacity: 0.3; margin-bottom: 6px;
+  }
+  .card-slot .card-price {
+    font-size: 0.75rem; color: var(--text-muted); font-weight: 700;
+    background: rgba(0,0,0,0.4); padding: 3px 8px; border-radius: 50px;
+  }
+
+  /* Buy overlay on unlocked but not-yet-purchased cards */
+  .card-slot.for-sale .buy-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px;
+    border-radius: 12px;
+    opacity: 0; transition: opacity .2s;
+  }
+  .card-slot.for-sale:hover .buy-overlay { opacity: 1; }
+  .buy-overlay .buy-label {
+    color: #fff; font-weight: 800; font-size: 0.9rem;
+  }
+  .buy-overlay .buy-price {
+    color: #FCD34D; font-size: 0.8rem; font-weight: 700;
+  }
+
+  /* Owned badge */
+  .card-slot.owned::after {
+    content: "✓";
+    position: absolute; top: 6px; left: 6px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #10B981; color: #fff;
+    font-size: 0.8rem; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    line-height: 22px; text-align: center;
+  }
+
+  /* ===== FULLSCREEN CARD VIEWER ===== */
+  .card-viewer {
+    display: none;
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(0,0,0,0.92);
+    align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .card-viewer.open { display: flex; animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  .card-viewer img {
+    max-width: 88vw; max-height: 88vh;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    transform-origin: center center;
+  }
+  .card-viewer img.flip-in  { animation: flipIn  .45s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .card-viewer img.flip-out { animation: flipOut .45s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+  @keyframes flipIn {
+    0%   { transform: scaleX(0) scale(0.4); opacity: 0; }
+    60%  { transform: scaleX(1.05) scale(1.05); opacity: 1; }
+    100% { transform: scaleX(1) scale(1); opacity: 1; }
+  }
+  @keyframes flipOut {
+    0%   { transform: scaleX(1) scale(1); opacity: 1; }
+    40%  { transform: scaleX(1.05) scale(1.05); opacity: 1; }
+    100% { transform: scaleX(0) scale(0.4); opacity: 0; }
+  }
+
+  .viewer-hint {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.5); font-size: 0.85rem;
+    pointer-events: none; z-index: 9999;
+  }
+
+  /* Purchase flash animation */
+  @keyframes purchaseFlash {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.12); box-shadow: 0 0 40px rgba(236,72,153,0.7); }
+    100% { transform: scale(1); }
+  }
+  .card-slot.just-bought { animation: purchaseFlash 0.5s ease; }
   @media (max-width: 400px) { .sentence-main { font-size: 1.2rem; } .btn-mic { font-size: 1.1rem; padding: 18px; } }
 </style>
 </head>
@@ -431,6 +572,10 @@
     <button class="mode-tab" id="tab-he" onclick="switchMode('he')">
       <span class="tab-icon">🇬🇧→🇮🇱</span>
       <span class="tab-label">אנגלית<br>לעברית</span>
+    </button>
+    <button class="mode-tab" id="tab-shop" onclick="switchMode('shop')">
+      <span class="tab-icon">🃏</span>
+      <span class="tab-label">חנות<br>קלפים</span>
     </button>
   </div>
 
@@ -515,6 +660,24 @@
     <button class="btn btn-ghost" onclick="goSettings()" style="align-self:center">← חזרה להגדרות</button>
   </div>
 
+  <!-- ===== SHOP SCREEN ===== -->
+  <div class="screen" id="screen-shop">
+    <div class="shop-header-card">
+      <div class="shop-title">🃏 חנות הקלפים</div>
+      <div class="screen-subtitle">קני קלפים תמורת הנקודות שלך!</div>
+      <div class="shop-balance">יתרה: <strong id="shop-balance-num">0</strong> <span id="shop-balance-unit">נקודות</span></div>
+    </div>
+    <div class="cards-grid" id="cards-grid">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- FULLSCREEN CARD VIEWER -->
+<div class="card-viewer" id="card-viewer" onclick="closeViewer()">
+  <img id="viewer-img" src="" alt="קלף">
+  <div class="viewer-hint">לחץ בכל מקום לסגירה</div>
 </div>
 
 <script>
@@ -766,6 +929,7 @@ let state = {
   sentenceDone: false,
   totalStars: 0,
   usedSentences: {},
+  ownedCards: [],
   recognition: null,
   isListening: false,
   progressTimer: null,
@@ -785,6 +949,7 @@ function init() {
       state.topic        = d.lastTopic    || "animals";
       state.difficulty   = d.lastDifficulty || "beginner";
       state.mode         = d.lastMode     || "en";
+      state.ownedCards   = d.ownedCards   || [];
     } catch(e) {}
   }
 
@@ -815,6 +980,7 @@ function saveData() {
     lastTopic: state.topic,
     lastDifficulty: state.difficulty,
     lastMode: state.mode,
+    ownedCards: state.ownedCards,
   }));
 }
 
@@ -826,19 +992,26 @@ function switchMode(mode) {
   state.mode = mode;
   saveData();
   applyModeUI(mode);
-  showScreen("screen-settings");
+  if (mode === 'shop') {
+    renderShop();
+    showScreen("screen-shop");
+  } else {
+    showScreen("screen-settings");
+  }
 }
 
 function applyModeUI(mode) {
-  const tabEn = document.getElementById("tab-en");
-  const tabHe = document.getElementById("tab-he");
-  tabEn.className = "mode-tab" + (mode === "en" ? " active-en" : "");
-  tabHe.className = "mode-tab" + (mode === "he" ? " active-he" : "");
+  const tabEn   = document.getElementById("tab-en");
+  const tabHe   = document.getElementById("tab-he");
+  const tabShop = document.getElementById("tab-shop");
+  tabEn.className   = "mode-tab" + (mode === "en"   ? " active-en"   : "");
+  tabHe.className   = "mode-tab" + (mode === "he"   ? " active-he"   : "");
+  tabShop.className = "mode-tab" + (mode === "shop" ? " active-shop" : "");
 
   if (mode === "en") {
     document.getElementById("settings-title").textContent     = "✨ תרגום לאנגלית!";
     document.getElementById("settings-subtitle").textContent  = "ראה משפט עברי – תרגם לאנגלית בקול 🎤";
-  } else {
+  } else if (mode === "he") {
     document.getElementById("settings-title").textContent     = "✨ תרגום לעברית!";
     document.getElementById("settings-subtitle").textContent  = "ראה משפט אנגלי – תרגם לעברית בקול 🎤";
   }
@@ -1256,6 +1429,112 @@ function launchConfetti() {
     container.appendChild(c);
   }
   setTimeout(() => { container.innerHTML = ""; }, 4500);
+}
+
+/* ==========================================================
+   SHOP
+   ========================================================== */
+const TOTAL_CARDS = 8;
+// Card prices: card 0 is cheapest, card 7 most expensive
+const CARD_PRICES = [5, 8, 12, 20, 30, 40, 50, 70];
+
+function renderShop() {
+  // Update balance display
+  const cfg = SCORING[state.difficulty];
+  document.getElementById("shop-balance-num").textContent = state.totalStars;
+  document.getElementById("shop-balance-unit").textContent = cfg ? cfg.unit : "נקודות";
+
+  const grid = document.getElementById("cards-grid");
+  grid.innerHTML = "";
+
+  for (let i = 0; i < TOTAL_CARDS; i++) {
+    const owned   = state.ownedCards.includes(i);
+    const price   = CARD_PRICES[i];
+    const canAfford = state.totalStars >= price;
+
+    const slot = document.createElement("div");
+    slot.id = `card-slot-${i}`;
+
+    if (owned) {
+      // Owned – show image, click to view fullscreen
+      slot.className = "card-slot owned";
+      slot.onclick = () => openViewer(i);
+      const img = document.createElement("img");
+      img.src = `image${i}.jpeg`;
+      img.alt = `קלף ${i+1}`;
+      img.onerror = () => { img.style.display="none"; slot.innerHTML += `<span style="font-size:2rem">🃏</span><div style="font-size:0.7rem;color:var(--text-muted);margin-top:6px">קלף ${i+1}</div>`; };
+      slot.appendChild(img);
+    } else if (canAfford) {
+      // Can buy – show locked with buy overlay on hover
+      slot.className = "card-slot for-sale";
+      slot.onclick = () => purchaseCard(i);
+      slot.innerHTML = `
+        <img src="image${i}.jpeg" alt="קלף ${i+1}" style="filter:blur(8px) brightness(0.4)"
+             onerror="this.style.display='none';this.parentElement.querySelector('.lock-icon').style.opacity='0.6'">
+        <div class="lock-icon" style="position:absolute">🔓</div>
+        <div class="buy-overlay">
+          <div class="buy-label">🛒 קנה קלף</div>
+          <div class="buy-price">⭐ ${price} נקודות</div>
+        </div>
+      `;
+    } else {
+      // Locked – not enough points
+      slot.className = "card-slot locked";
+      slot.innerHTML = `
+        <img src="image${i}.jpeg" alt="קלף ${i+1}" style="filter:blur(10px) brightness(0.25)"
+             onerror="this.style.display='none'">
+        <div class="lock-icon" style="position:absolute">🔒</div>
+        <div class="card-price">⭐ ${price}</div>
+      `;
+    }
+
+    grid.appendChild(slot);
+  }
+}
+
+function purchaseCard(index) {
+  const price = CARD_PRICES[index];
+  if (state.ownedCards.includes(index)) { openViewer(index); return; }
+  if (state.totalStars < price) return;
+
+  state.totalStars -= price;
+  state.ownedCards.push(index);
+  saveData();
+  updateTotalStarsDisplay();
+
+  // Flash animation on slot, then re-render
+  const slot = document.getElementById(`card-slot-${index}`);
+  if (slot) {
+    slot.classList.add("just-bought");
+    setTimeout(() => {
+      renderShop();
+      // Auto-open viewer after purchase
+      openViewer(index);
+    }, 500);
+  }
+}
+
+function openViewer(index) {
+  const viewer = document.getElementById("card-viewer");
+  const img    = document.getElementById("viewer-img");
+  img.src = `image${index}.jpeg`;
+  img.className = "";
+  viewer.classList.add("open");
+  // Flip-in animation
+  requestAnimationFrame(() => {
+    img.className = "flip-in";
+  });
+}
+
+function closeViewer() {
+  const viewer = document.getElementById("card-viewer");
+  const img    = document.getElementById("viewer-img");
+  img.className = "flip-out";
+  img.addEventListener("animationend", () => {
+    viewer.classList.remove("open");
+    img.className = "";
+    renderShop(); // refresh grid in case we came from purchase
+  }, { once: true });
 }
 
 document.addEventListener("DOMContentLoaded", init);
