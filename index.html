@@ -533,6 +533,52 @@
     100% { transform: scale(1); }
   }
   .card-slot.just-bought { animation: purchaseFlash 0.5s ease; }
+
+  /* ===== PURCHASE CONFIRM MODAL ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9990;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
+  .modal-box {
+    width: 100%; max-width: 320px;
+    background: #1E1540; border: 1.5px solid rgba(236,72,153,0.4);
+    border-radius: 22px; padding: 24px 20px;
+    text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+    animation: fadeUp .25s ease;
+  }
+  .modal-card-preview {
+    width: 110px; height: 165px; margin: 0 auto 16px;
+    border-radius: 12px; overflow: hidden;
+    border: 2px solid rgba(236,72,153,0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    background: rgba(255,255,255,0.05);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-card-preview img { width:100%; height:100%; object-fit:cover; }
+  .modal-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+  .modal-price { font-size: 1.5rem; font-weight: 900; margin: 8px 0 4px; color: #FCD34D; }
+  .modal-balance { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 18px; }
+  .modal-balance.cant-afford { color: #FCA5A5; }
+  .modal-btn-row { display: flex; gap: 10px; }
+  .modal-btn-buy {
+    flex: 2; padding: 14px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--pink), #A855F7);
+    color: #fff; font-size: 1rem; font-weight: 800;
+    cursor: pointer; font-family: var(--font);
+    box-shadow: 0 4px 16px rgba(236,72,153,0.4); transition: all .18s;
+  }
+  .modal-btn-buy:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(236,72,153,0.6); }
+  .modal-btn-buy:disabled { opacity: 0.4; cursor: default; transform: none; }
+  .modal-btn-cancel {
+    flex: 1; padding: 14px; border-radius: 12px;
+    border: 1.5px solid var(--glass-border); background: transparent;
+    color: var(--text-muted); font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; font-family: var(--font); transition: all .18s;
+  }
+  .modal-btn-cancel:hover { border-color: var(--text-muted); color: var(--text); }
+
   @media (max-width: 400px) { .sentence-main { font-size: 1.2rem; } .btn-mic { font-size: 1.1rem; padding: 18px; } }
 </style>
 </head>
@@ -597,6 +643,7 @@
       <div class="field-group">
         <label class="field-label" for="topic-select">נושא</label>
         <select class="custom-select" id="topic-select">
+          <option value="random">🎲 נושא רנדומלי</option>
           <option value="animals">🐾 חיות</option>
           <option value="food">🍕 אוכל ומשקאות</option>
           <option value="school">🎒 בית ספר</option>
@@ -674,6 +721,23 @@
 
 </div>
 
+<!-- PURCHASE CONFIRM MODAL -->
+<div class="modal-overlay" id="purchase-modal">
+  <div class="modal-box">
+    <div class="modal-card-preview">
+      <img id="modal-preview-img" src="" alt="קלף" onerror="this.style.display='none';document.getElementById('modal-no-img').style.display='flex'">
+      <div id="modal-no-img" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:3rem">🃏</div>
+    </div>
+    <div class="modal-title" id="modal-title">קלף מספר 1</div>
+    <div class="modal-price" id="modal-price">⭐ 5 נקודות</div>
+    <div class="modal-balance" id="modal-balance"></div>
+    <div class="modal-btn-row">
+      <button class="modal-btn-buy" id="modal-btn-buy" onclick="confirmPurchase()">🛒 קני!</button>
+      <button class="modal-btn-cancel" onclick="closeModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
 <!-- FULLSCREEN CARD VIEWER -->
 <div class="card-viewer" id="card-viewer" onclick="closeViewer()">
   <img id="viewer-img" src="" alt="קלף">
@@ -682,155 +746,327 @@
 
 <script>
 /* ==========================================================
-   SENTENCE BANK
+   SENTENCE BANK  (expanded – ~15 per topic per level)
    Every entry: { en, he, words:[{en,he}] }
-   words = hint pairs, shown one at a time
    ========================================================== */
 const SENTENCES = {
   animals: {
     beginner: [
-      { en:"The dog is happy.",               he:"הכלב שמח.",                          words:[{en:"The dog",he:"הכלב"},{en:"is happy",he:"שמח"}] },
-      { en:"The cat drinks milk.",             he:"החתול שותה חלב.",                    words:[{en:"The cat",he:"החתול"},{en:"drinks milk",he:"שותה חלב"}] },
-      { en:"I love animals.",                  he:"אני אוהב חיות.",                     words:[{en:"I love",he:"אני אוהב"},{en:"animals",he:"חיות"}] },
-      { en:"Birds can fly.",                   he:"ציפורים יכולות לעוף.",               words:[{en:"Birds",he:"ציפורים"},{en:"can fly",he:"יכולות לעוף"}] },
-      { en:"The rabbit is white.",             he:"הארנב לבן.",                         words:[{en:"The rabbit",he:"הארנב"},{en:"is white",he:"לבן"}] },
+      { en:"The dog is happy.",              he:"הכלב שמח.",                       words:[{en:"The dog",he:"הכלב"},{en:"is happy",he:"שמח"}] },
+      { en:"The cat drinks milk.",            he:"החתול שותה חלב.",                 words:[{en:"The cat",he:"החתול"},{en:"drinks milk",he:"שותה חלב"}] },
+      { en:"I love animals.",                 he:"אני אוהב חיות.",                  words:[{en:"I love",he:"אני אוהב"},{en:"animals",he:"חיות"}] },
+      { en:"Birds can fly.",                  he:"ציפורים יכולות לעוף.",            words:[{en:"Birds",he:"ציפורים"},{en:"can fly",he:"יכולות לעוף"}] },
+      { en:"The rabbit is white.",            he:"הארנב לבן.",                      words:[{en:"rabbit",he:"ארנב"},{en:"white",he:"לבן"}] },
+      { en:"The fish is in the water.",       he:"הדג נמצא במים.",                  words:[{en:"fish",he:"דג"},{en:"in the water",he:"במים"}] },
+      { en:"The horse is very big.",          he:"הסוס גדול מאוד.",                 words:[{en:"horse",he:"סוס"},{en:"very big",he:"גדול מאוד"}] },
+      { en:"I see a small frog.",             he:"אני רואה צפרדע קטנה.",            words:[{en:"see",he:"רואה"},{en:"small frog",he:"צפרדע קטנה"}] },
+      { en:"The cow gives us milk.",          he:"הפרה נותנת לנו חלב.",             words:[{en:"cow",he:"פרה"},{en:"gives us milk",he:"נותנת לנו חלב"}] },
+      { en:"A duck swims in the pond.",       he:"ברווז שוחה בבריכה.",              words:[{en:"duck",he:"ברווז"},{en:"swims",he:"שוחה"},{en:"pond",he:"בריכה"}] },
+      { en:"The monkey eats a banana.",       he:"הקוף אוכל בננה.",                 words:[{en:"monkey",he:"קוף"},{en:"eats a banana",he:"אוכל בננה"}] },
+      { en:"My pet dog sleeps all day.",      he:"הכלב שלי ישן כל היום.",           words:[{en:"pet dog",he:"כלב"},{en:"sleeps all day",he:"ישן כל היום"}] },
+      { en:"The snake is long and thin.",     he:"הנחש ארוך ודק.",                  words:[{en:"snake",he:"נחש"},{en:"long and thin",he:"ארוך ודק"}] },
+      { en:"A bee makes honey.",              he:"דבורה מייצרת דבש.",               words:[{en:"bee",he:"דבורה"},{en:"makes honey",he:"מייצרת דבש"}] },
+      { en:"The owl sleeps in the day.",      he:"הינשוף ישן ביום.",                words:[{en:"owl",he:"ינשוף"},{en:"sleeps in the day",he:"ישן ביום"}] },
     ],
     intermediate: [
-      { en:"Elephants have very good memory.",         he:"לפילים יש זיכרון מצוין.",           words:[{en:"Elephants",he:"פילים"},{en:"very good memory",he:"זיכרון מצוין"}] },
-      { en:"The lion is the king of the jungle.",      he:"האריה הוא מלך הג'ונגל.",            words:[{en:"The lion",he:"האריה"},{en:"king of the jungle",he:"מלך הג'ונגל"}] },
-      { en:"Dolphins are very intelligent animals.",   he:"דולפינים הם חיות חכמות מאוד.",      words:[{en:"Dolphins",he:"דולפינים"},{en:"intelligent",he:"חכמות"}] },
-      { en:"My dog loves to play in the park.",        he:"הכלב שלי אוהב לשחק בפארק.",        words:[{en:"My dog",he:"הכלב שלי"},{en:"loves to play",he:"אוהב לשחק"},{en:"in the park",he:"בפארק"}] },
-      { en:"Penguins live in cold places.",            he:"פינגווינים חיים במקומות קרים.",     words:[{en:"Penguins",he:"פינגווינים"},{en:"cold places",he:"מקומות קרים"}] },
+      { en:"Elephants have very good memory.",        he:"לפילים יש זיכרון מצוין.",          words:[{en:"Elephants",he:"פילים"},{en:"very good memory",he:"זיכרון מצוין"}] },
+      { en:"The lion is the king of the jungle.",     he:"האריה הוא מלך הג'ונגל.",           words:[{en:"The lion",he:"האריה"},{en:"king of the jungle",he:"מלך הג'ונגל"}] },
+      { en:"Dolphins are very intelligent animals.",  he:"דולפינים הם חיות חכמות מאוד.",     words:[{en:"Dolphins",he:"דולפינים"},{en:"intelligent",he:"חכמות"}] },
+      { en:"My dog loves to play in the park.",       he:"הכלב שלי אוהב לשחק בפארק.",       words:[{en:"My dog",he:"הכלב שלי"},{en:"loves to play",he:"אוהב לשחק"},{en:"in the park",he:"בפארק"}] },
+      { en:"Penguins live in cold places.",           he:"פינגווינים חיים במקומות קרים.",    words:[{en:"Penguins",he:"פינגווינים"},{en:"cold places",he:"מקומות קרים"}] },
+      { en:"Wolves hunt together in packs.",          he:"זאבים צדים יחד בלהקות.",           words:[{en:"Wolves",he:"זאבים"},{en:"hunt together",he:"צדים יחד"},{en:"packs",he:"להקות"}] },
+      { en:"Butterflies lay eggs on leaves.",         he:"פרפרים מטילים ביצים על עלים.",     words:[{en:"Butterflies",he:"פרפרים"},{en:"lay eggs",he:"מטילים ביצים"},{en:"leaves",he:"עלים"}] },
+      { en:"Camels store water in their humps.",      he:"גמלים מאחסנים מים בדבשותיהם.",    words:[{en:"Camels",he:"גמלים"},{en:"store water",he:"מאחסנים מים"},{en:"humps",he:"דבשות"}] },
+      { en:"The chimpanzee uses tools to find food.", he:"השימפנזה משתמש בכלים למציאת מזון.",words:[{en:"chimpanzee",he:"שימפנזה"},{en:"uses tools",he:"משתמש בכלים"},{en:"food",he:"מזון"}] },
+      { en:"Frogs breathe through their skin.",       he:"צפרדעים נושמות דרך עורן.",         words:[{en:"Frogs",he:"צפרדעים"},{en:"breathe",he:"נושמות"},{en:"skin",he:"עור"}] },
+      { en:"The parrot can repeat human words.",      he:"התוכי יכול לחזור על מילים אנושיות.",words:[{en:"parrot",he:"תוכי"},{en:"repeat",he:"לחזור על"},{en:"human words",he:"מילים אנושיות"}] },
+      { en:"Sharks have rows of sharp teeth.",        he:"לכרישים יש שורות של שיניים חדות.", words:[{en:"Sharks",he:"כרישים"},{en:"rows",he:"שורות"},{en:"sharp teeth",he:"שיניים חדות"}] },
+      { en:"Bats navigate using sound waves.",        he:"עטלפים מתמצאים באמצעות גלי קול.",  words:[{en:"Bats",he:"עטלפים"},{en:"navigate",he:"מתמצאים"},{en:"sound waves",he:"גלי קול"}] },
+      { en:"The giraffe has a very long neck.",       he:"לג'ירפה יש צוואר ארוך מאוד.",      words:[{en:"giraffe",he:"ג'ירפה"},{en:"long neck",he:"צוואר ארוך"}] },
+      { en:"Salmon swim upstream to lay eggs.",       he:"סלמונים שוחים נגד הזרם להטלת ביצים.",words:[{en:"Salmon",he:"סלמונים"},{en:"swim upstream",he:"שוחים נגד הזרם"},{en:"lay eggs",he:"הטלת ביצים"}] },
     ],
     advanced: [
       { en:"Many species of animals are endangered due to climate change.", he:"מינים רבים של חיות בסכנת הכחדה בגלל שינויי אקלים.", words:[{en:"species",he:"מינים"},{en:"endangered",he:"בסכנת הכחדה"},{en:"climate change",he:"שינויי אקלים"}] },
       { en:"Marine biologists study the behavior of ocean creatures.",      he:"ביולוגים ימיים חוקרים את התנהגות יצורי הים.",      words:[{en:"Marine biologists",he:"ביולוגים ימיים"},{en:"behavior",he:"התנהגות"},{en:"ocean creatures",he:"יצורי הים"}] },
       { en:"The migration patterns of birds are truly fascinating.",        he:"דפוסי הנדידה של ציפורים מרתקים באמת.",             words:[{en:"migration patterns",he:"דפוסי נדידה"},{en:"fascinating",he:"מרתקים"}] },
       { en:"Cheetahs can reach speeds of up to one hundred kilometers per hour.", he:"צ'יטות יכולות להגיע למהירות של עד מאה קמ\"ש.", words:[{en:"Cheetahs",he:"צ'יטות"},{en:"reach speeds",he:"להגיע למהירות"}] },
+      { en:"Symbiotic relationships between species benefit both organisms.",he:"יחסי סימביוזה בין מינים מועילים לשני האורגניזמים.",words:[{en:"Symbiotic",he:"סימביוטי"},{en:"benefit",he:"מועיל"},{en:"organisms",he:"אורגניזמים"}] },
+      { en:"The venom of some snakes can be used to develop life-saving medicines.", he:"ארס של נחשים מסוימים יכול לשמש לפיתוח תרופות מצילות חיים.", words:[{en:"venom",he:"ארס"},{en:"develop",he:"לפתח"},{en:"life-saving medicines",he:"תרופות מצילות חיים"}] },
+      { en:"Octopuses have three hearts and blue blood.",                   he:"לתמנונים שלושה לבבות ודם כחול.",                  words:[{en:"Octopuses",he:"תמנונים"},{en:"three hearts",he:"שלושה לבבות"},{en:"blue blood",he:"דם כחול"}] },
+      { en:"Animal communication involves sounds, gestures, and chemical signals.", he:"תקשורת בין חיות כוללת קולות, תנועות ואותות כימיים.", words:[{en:"communication",he:"תקשורת"},{en:"gestures",he:"תנועות"},{en:"chemical signals",he:"אותות כימיים"}] },
+      { en:"Deforestation destroys habitats and threatens countless species.", he:"כריתת יערות הורסת בתי גידול ומאיימת על מינים רבים.", words:[{en:"Deforestation",he:"כריתת יערות"},{en:"habitats",he:"בתי גידול"},{en:"countless species",he:"מינים רבים"}] },
+      { en:"The intelligence of crows rivals that of many primates.",       he:"האינטליגנציה של עורבים מתחרה בזו של פרימטים רבים.", words:[{en:"intelligence",he:"אינטליגנציה"},{en:"crows",he:"עורבים"},{en:"rivals",he:"מתחרה"},{en:"primates",he:"פרימטים"}] },
     ],
   },
   food: {
     beginner: [
-      { en:"I eat breakfast every morning.", he:"אני אוכל ארוחת בוקר כל בוקר.", words:[{en:"breakfast",he:"ארוחת בוקר"},{en:"every morning",he:"כל בוקר"}] },
-      { en:"Pizza is my favorite food.",     he:"פיצה היא האוכל האהוב עלי.",    words:[{en:"Pizza",he:"פיצה"},{en:"favorite",he:"אהוב"}] },
-      { en:"I drink water every day.",       he:"אני שותה מים כל יום.",         words:[{en:"drink water",he:"שותה מים"},{en:"every day",he:"כל יום"}] },
-      { en:"The apple is red and sweet.",    he:"התפוח אדום ומתוק.",            words:[{en:"apple",he:"תפוח"},{en:"red and sweet",he:"אדום ומתוק"}] },
-      { en:"We eat lunch at school.",        he:"אנחנו אוכלים צהריים בבית הספר.", words:[{en:"lunch",he:"ארוחת צהריים"},{en:"at school",he:"בבית הספר"}] },
+      { en:"I eat breakfast every morning.",  he:"אני אוכל ארוחת בוקר כל בוקר.", words:[{en:"breakfast",he:"ארוחת בוקר"},{en:"every morning",he:"כל בוקר"}] },
+      { en:"Pizza is my favorite food.",      he:"פיצה היא האוכל האהוב עלי.",    words:[{en:"Pizza",he:"פיצה"},{en:"favorite",he:"אהוב"}] },
+      { en:"I drink water every day.",        he:"אני שותה מים כל יום.",         words:[{en:"drink water",he:"שותה מים"},{en:"every day",he:"כל יום"}] },
+      { en:"The apple is red and sweet.",     he:"התפוח אדום ומתוק.",            words:[{en:"apple",he:"תפוח"},{en:"red and sweet",he:"אדום ומתוק"}] },
+      { en:"We eat lunch at school.",         he:"אנחנו אוכלים צהריים בבית הספר.",words:[{en:"lunch",he:"ארוחת צהריים"},{en:"at school",he:"בבית הספר"}] },
+      { en:"I like chocolate ice cream.",     he:"אני אוהב גלידת שוקולד.",       words:[{en:"chocolate ice cream",he:"גלידת שוקולד"},{en:"like",he:"אוהב"}] },
+      { en:"The bread is warm and fresh.",    he:"הלחם חמים ורענן.",             words:[{en:"bread",he:"לחם"},{en:"warm and fresh",he:"חמים ורענן"}] },
+      { en:"We drink juice in the morning.",  he:"אנחנו שותים מיץ בבוקר.",      words:[{en:"drink juice",he:"שותים מיץ"},{en:"in the morning",he:"בבוקר"}] },
+      { en:"I want a big slice of cake.",     he:"אני רוצה פרוסה גדולה של עוגה.",words:[{en:"big slice",he:"פרוסה גדולה"},{en:"cake",he:"עוגה"}] },
+      { en:"Oranges are full of vitamin C.",  he:"תפוזים עשירים בויטמין C.",     words:[{en:"Oranges",he:"תפוזים"},{en:"vitamin C",he:"ויטמין C"}] },
+      { en:"I put butter on my toast.",       he:"אני שם חמאה על הטוסט שלי.",    words:[{en:"butter",he:"חמאה"},{en:"toast",he:"טוסט"}] },
+      { en:"She eats a banana every day.",    he:"היא אוכלת בננה כל יום.",       words:[{en:"eats a banana",he:"אוכלת בננה"},{en:"every day",he:"כל יום"}] },
+      { en:"I love grapes and strawberries.", he:"אני אוהב ענבים ותותים.",       words:[{en:"grapes",he:"ענבים"},{en:"strawberries",he:"תותים"}] },
+      { en:"We cook soup for dinner.",        he:"אנחנו מבשלים מרק לארוחת ערב.",words:[{en:"cook soup",he:"מבשלים מרק"},{en:"dinner",he:"ארוחת ערב"}] },
+      { en:"The cheese is yellow and salty.", he:"הגבינה צהובה ומלוחה.",         words:[{en:"cheese",he:"גבינה"},{en:"yellow",he:"צהובה"},{en:"salty",he:"מלוחה"}] },
     ],
     intermediate: [
-      { en:"My mother cooks delicious pasta on Fridays.",       he:"אמא שלי מבשלת פסטה טעימה בימי שישי.",     words:[{en:"cooks",he:"מבשלת"},{en:"delicious",he:"טעימה"},{en:"on Fridays",he:"בימי שישי"}] },
-      { en:"I prefer vegetables over junk food.",              he:"אני מעדיף ירקות על פני אוכל זבל.",        words:[{en:"prefer",he:"מעדיף"},{en:"vegetables",he:"ירקות"},{en:"junk food",he:"אוכל זבל"}] },
-      { en:"The restaurant serves fresh seafood every day.",   he:"המסעדה מגישה פירות ים טריים כל יום.",     words:[{en:"restaurant",he:"מסעדה"},{en:"fresh seafood",he:"פירות ים טריים"}] },
-      { en:"She baked a chocolate cake for the party.",        he:"היא אפתה עוגת שוקולד למסיבה.",           words:[{en:"baked",he:"אפתה"},{en:"chocolate cake",he:"עוגת שוקולד"},{en:"party",he:"מסיבה"}] },
+      { en:"My mother cooks delicious pasta on Fridays.",      he:"אמא שלי מבשלת פסטה טעימה בימי שישי.",    words:[{en:"cooks",he:"מבשלת"},{en:"delicious",he:"טעימה"},{en:"on Fridays",he:"בימי שישי"}] },
+      { en:"I prefer vegetables over junk food.",             he:"אני מעדיף ירקות על פני אוכל זבל.",       words:[{en:"prefer",he:"מעדיף"},{en:"vegetables",he:"ירקות"},{en:"junk food",he:"אוכל זבל"}] },
+      { en:"The restaurant serves fresh seafood every day.",  he:"המסעדה מגישה פירות ים טריים כל יום.",    words:[{en:"restaurant",he:"מסעדה"},{en:"fresh seafood",he:"פירות ים טריים"}] },
+      { en:"She baked a chocolate cake for the party.",       he:"היא אפתה עוגת שוקולד למסיבה.",          words:[{en:"baked",he:"אפתה"},{en:"chocolate cake",he:"עוגת שוקולד"},{en:"party",he:"מסיבה"}] },
+      { en:"I always add olive oil to my salad.",             he:"אני תמיד מוסיף שמן זית לסלט שלי.",      words:[{en:"add",he:"מוסיף"},{en:"olive oil",he:"שמן זית"},{en:"salad",he:"סלט"}] },
+      { en:"The market sells fresh fruits and vegetables.",   he:"השוק מוכר פירות וירקות טריים.",          words:[{en:"market",he:"שוק"},{en:"sells",he:"מוכר"},{en:"fresh fruits",he:"פירות טריים"}] },
+      { en:"We ordered sushi and noodles for lunch.",         he:"הזמנו סושי ואטריות לצהריים.",            words:[{en:"ordered",he:"הזמנו"},{en:"sushi",he:"סושי"},{en:"noodles",he:"אטריות"}] },
+      { en:"He drinks two cups of coffee every morning.",     he:"הוא שותה שתי כוסות קפה כל בוקר.",       words:[{en:"two cups",he:"שתי כוסות"},{en:"coffee",he:"קפה"},{en:"every morning",he:"כל בוקר"}] },
+      { en:"Honey is sweeter than sugar.",                    he:"דבש מתוק יותר מסוכר.",                   words:[{en:"Honey",he:"דבש"},{en:"sweeter",he:"מתוק יותר"},{en:"sugar",he:"סוכר"}] },
+      { en:"She made a vegetable stir-fry for dinner.",       he:"היא הכינה מוקפץ ירקות לארוחת ערב.",     words:[{en:"made",he:"הכינה"},{en:"vegetable stir-fry",he:"מוקפץ ירקות"},{en:"dinner",he:"ארוחת ערב"}] },
+      { en:"I enjoy trying food from different cultures.",    he:"אני נהנה לטעום אוכל מתרבויות שונות.",   words:[{en:"enjoy trying",he:"נהנה לטעום"},{en:"different cultures",he:"תרבויות שונות"}] },
+      { en:"The garlic and onion make the sauce tastier.",    he:"השום והבצל הופכים את הרוטב לטעים יותר.",words:[{en:"garlic and onion",he:"שום ובצל"},{en:"sauce",he:"רוטב"},{en:"tastier",he:"טעים יותר"}] },
     ],
     advanced: [
       { en:"A balanced diet includes proteins, carbohydrates, and healthy fats.", he:"תזונה מאוזנת כוללת חלבונים, פחמימות ושומנים בריאים.", words:[{en:"balanced diet",he:"תזונה מאוזנת"},{en:"proteins",he:"חלבונים"},{en:"carbohydrates",he:"פחמימות"}] },
-      { en:"Fermented foods are beneficial for digestive health.",               he:"מזונות מותססים מועילים לבריאות מערכת העיכול.",        words:[{en:"Fermented",he:"מותססים"},{en:"beneficial",he:"מועילים"},{en:"digestive",he:"עיכול"}] },
-      { en:"The chef prepared an extraordinary meal using local ingredients.",   he:"השף הכין ארוחה יוצאת דופן ממרכיבים מקומיים.",         words:[{en:"chef",he:"שף"},{en:"extraordinary",he:"יוצאת דופן"},{en:"local ingredients",he:"מרכיבים מקומיים"}] },
+      { en:"Fermented foods are beneficial for digestive health.",               he:"מזונות מותססים מועילים לבריאות מערכת העיכול.",       words:[{en:"Fermented",he:"מותססים"},{en:"beneficial",he:"מועילים"},{en:"digestive",he:"עיכול"}] },
+      { en:"The chef prepared an extraordinary meal using local ingredients.",   he:"השף הכין ארוחה יוצאת דופן ממרכיבים מקומיים.",        words:[{en:"chef",he:"שף"},{en:"extraordinary",he:"יוצאת דופן"},{en:"local ingredients",he:"מרכיבים מקומיים"}] },
+      { en:"Processed foods often contain excessive amounts of sugar and salt.", he:"מזונות מעובדים מכילים לעיתים קרובות כמויות עודפות של סוכר ומלח.", words:[{en:"Processed foods",he:"מזונות מעובדים"},{en:"excessive amounts",he:"כמויות עודפות"},{en:"sugar and salt",he:"סוכר ומלח"}] },
+      { en:"Food sustainability requires reducing waste and choosing seasonal produce.", he:"קיימות מזון דורשת צמצום בזבוז ובחירת תוצרת עונתית.", words:[{en:"sustainability",he:"קיימות"},{en:"reducing waste",he:"צמצום בזבוז"},{en:"seasonal produce",he:"תוצרת עונתית"}] },
+      { en:"The Maillard reaction is responsible for the browning of bread.",    he:"תגובת מייאר אחראית להשחמת הלחם.",                    words:[{en:"Maillard reaction",he:"תגובת מייאר"},{en:"responsible",he:"אחראית"},{en:"browning",he:"השחמת"}] },
+      { en:"Cultural identity is often deeply connected to traditional cuisine.", he:"זהות תרבותית קשורה לעיתים קרובות עמוקות לבישול מסורתי.", words:[{en:"Cultural identity",he:"זהות תרבותית"},{en:"traditional cuisine",he:"בישול מסורתי"}] },
+      { en:"Nutritional labels help consumers make informed dietary choices.",   he:"תוויות תזונה עוזרות לצרכנים לבחור בחירות תזונתיות מושכלות.", words:[{en:"Nutritional labels",he:"תוויות תזונה"},{en:"informed",he:"מושכלות"},{en:"dietary choices",he:"בחירות תזונתיות"}] },
     ],
   },
   school: {
     beginner: [
-      { en:"I go to school by bus.",            he:"אני הולך לבית ספר באוטובוס.",       words:[{en:"school",he:"בית ספר"},{en:"by bus",he:"באוטובוס"}] },
-      { en:"My teacher is very kind.",          he:"המורה שלי מאוד נחמד.",              words:[{en:"teacher",he:"מורה"},{en:"kind",he:"נחמד"}] },
-      { en:"I have five books in my bag.",      he:"יש לי חמישה ספרים בתיק.",          words:[{en:"five books",he:"חמישה ספרים"},{en:"bag",he:"תיק"}] },
-      { en:"We study math and English.",        he:"אנחנו לומדים מתמטיקה ואנגלית.",    words:[{en:"study",he:"לומדים"},{en:"math",he:"מתמטיקה"}] },
+      { en:"I go to school by bus.",              he:"אני הולך לבית ספר באוטובוס.",       words:[{en:"school",he:"בית ספר"},{en:"by bus",he:"באוטובוס"}] },
+      { en:"My teacher is very kind.",            he:"המורה שלי מאוד נחמד.",              words:[{en:"teacher",he:"מורה"},{en:"kind",he:"נחמד"}] },
+      { en:"I have five books in my bag.",        he:"יש לי חמישה ספרים בתיק.",          words:[{en:"five books",he:"חמישה ספרים"},{en:"bag",he:"תיק"}] },
+      { en:"We study math and English.",          he:"אנחנו לומדים מתמטיקה ואנגלית.",    words:[{en:"study",he:"לומדים"},{en:"math",he:"מתמטיקה"}] },
       { en:"School starts at eight in the morning.", he:"בית הספר מתחיל בשמונה בבוקר.", words:[{en:"starts",he:"מתחיל"},{en:"eight",he:"שמונה"},{en:"morning",he:"בוקר"}] },
+      { en:"I sit next to my best friend.",       he:"אני יושב ליד החבר הכי טוב שלי.",   words:[{en:"sit next to",he:"יושב ליד"},{en:"best friend",he:"החבר הכי טוב"}] },
+      { en:"We have a break at ten o'clock.",     he:"יש לנו הפסקה בעשר.",                words:[{en:"break",he:"הפסקה"},{en:"ten o'clock",he:"בעשר"}] },
+      { en:"I write with a blue pen.",            he:"אני כותב עם עט כחול.",              words:[{en:"write",he:"כותב"},{en:"blue pen",he:"עט כחול"}] },
+      { en:"The classroom has twenty students.",  he:"בכיתה יש עשרים תלמידים.",           words:[{en:"classroom",he:"כיתה"},{en:"twenty students",he:"עשרים תלמידים"}] },
+      { en:"I love our art and music lessons.",   he:"אני אוהב את שיעורי האמנות והמוזיקה.",words:[{en:"art",he:"אמנות"},{en:"music lessons",he:"שיעורי מוזיקה"}] },
+      { en:"We read a story in class today.",     he:"קראנו סיפור בכיתה היום.",            words:[{en:"read a story",he:"קראנו סיפור"},{en:"in class",he:"בכיתה"}] },
+      { en:"My pencil case is on the desk.",      he:"קופסת העפרונות שלי נמצאת על השולחן.",words:[{en:"pencil case",he:"קופסת עפרונות"},{en:"desk",he:"שולחן"}] },
+      { en:"We clean the classroom together.",    he:"אנחנו מנקים את הכיתה יחד.",         words:[{en:"clean",he:"מנקים"},{en:"classroom",he:"כיתה"},{en:"together",he:"יחד"}] },
+      { en:"I raise my hand to answer.",          he:"אני מרים את ידי לענות.",             words:[{en:"raise my hand",he:"מרים ידי"},{en:"answer",he:"לענות"}] },
+      { en:"We go home at two in the afternoon.", he:"אנחנו הולכים הביתה בשתיים.",        words:[{en:"go home",he:"הולכים הביתה"},{en:"two in the afternoon",he:"בשתיים"}] },
     ],
     intermediate: [
-      { en:"Our science project is about solar energy.",       he:"הפרויקט מדעים שלנו עוסק באנרגיה סולארית.", words:[{en:"science project",he:"פרויקט מדעים"},{en:"solar energy",he:"אנרגיה סולארית"}] },
-      { en:"The library has thousands of interesting books.",  he:"לספרייה יש אלפי ספרים מעניינים.",          words:[{en:"library",he:"ספרייה"},{en:"thousands",he:"אלפי"},{en:"interesting",he:"מעניינים"}] },
-      { en:"We have a history test next Monday.",              he:"יש לנו מבחן היסטוריה ביום שני הבא.",       words:[{en:"history test",he:"מבחן היסטוריה"},{en:"next Monday",he:"יום שני הבא"}] },
-      { en:"I enjoy drawing during art class.",               he:"אני נהנה לצייר בשיעור אמנות.",             words:[{en:"enjoy",he:"נהנה"},{en:"drawing",he:"לצייר"},{en:"art class",he:"שיעור אמנות"}] },
+      { en:"Our science project is about solar energy.",      he:"הפרויקט מדעים שלנו עוסק באנרגיה סולארית.", words:[{en:"science project",he:"פרויקט מדעים"},{en:"solar energy",he:"אנרגיה סולארית"}] },
+      { en:"The library has thousands of interesting books.", he:"לספרייה יש אלפי ספרים מעניינים.",          words:[{en:"library",he:"ספרייה"},{en:"thousands",he:"אלפי"},{en:"interesting",he:"מעניינים"}] },
+      { en:"We have a history test next Monday.",             he:"יש לנו מבחן היסטוריה ביום שני הבא.",       words:[{en:"history test",he:"מבחן היסטוריה"},{en:"next Monday",he:"יום שני הבא"}] },
+      { en:"I enjoy drawing during art class.",              he:"אני נהנה לצייר בשיעור אמנות.",             words:[{en:"enjoy",he:"נהנה"},{en:"drawing",he:"לצייר"},{en:"art class",he:"שיעור אמנות"}] },
+      { en:"We did a group project about the rainforest.",   he:"עשינו פרויקט קבוצתי על יערות הגשם.",       words:[{en:"group project",he:"פרויקט קבוצתי"},{en:"rainforest",he:"יערות גשם"}] },
+      { en:"The principal announced a new school rule.",     he:"המנהל הכריז על כלל חדש בבית הספר.",        words:[{en:"principal",he:"מנהל"},{en:"announced",he:"הכריז"},{en:"school rule",he:"כלל בבית הספר"}] },
+      { en:"I studied hard and got a high grade.",           he:"למדתי קשה וקיבלתי ציון גבוה.",             words:[{en:"studied hard",he:"למדתי קשה"},{en:"high grade",he:"ציון גבוה"}] },
+      { en:"We learned about ancient Egypt in history.",     he:"למדנו על מצרים העתיקה בהיסטוריה.",         words:[{en:"ancient Egypt",he:"מצרים העתיקה"},{en:"history",he:"היסטוריה"}] },
+      { en:"The computer lab has twenty new computers.",     he:"מעבדת המחשבים כוללת עשרים מחשבים חדשים.", words:[{en:"computer lab",he:"מעבדת מחשבים"},{en:"twenty",he:"עשרים"},{en:"new computers",he:"מחשבים חדשים"}] },
+      { en:"She won first place in the spelling contest.",   he:"היא זכתה במקום הראשון בתחרות האיות.",      words:[{en:"won first place",he:"זכתה במקום הראשון"},{en:"spelling contest",he:"תחרות איות"}] },
+      { en:"We went on a field trip to the science museum.", he:"יצאנו לטיול שדה למוזיאון המדע.",           words:[{en:"field trip",he:"טיול שדה"},{en:"science museum",he:"מוזיאון המדע"}] },
+      { en:"My favorite subject is geography.",              he:"המקצוע האהוב עלי הוא גיאוגרפיה.",          words:[{en:"favorite subject",he:"המקצוע האהוב"},{en:"geography",he:"גיאוגרפיה"}] },
     ],
     advanced: [
-      { en:"Critical thinking skills are essential for academic success.", he:"כישורי חשיבה ביקורתית חיוניים להצלחה אקדמית.", words:[{en:"critical thinking",he:"חשיבה ביקורתית"},{en:"essential",he:"חיוניים"},{en:"academic success",he:"הצלחה אקדמית"}] },
-      { en:"The curriculum has been updated to include digital literacy.",  he:"תוכנית הלימודים עודכנה כדי לכלול אוריינות דיגיטלית.", words:[{en:"curriculum",he:"תוכנית לימודים"},{en:"digital literacy",he:"אוריינות דיגיטלית"}] },
-      { en:"Students who read regularly tend to perform better in exams.", he:"תלמידים שקוראים באופן קבוע נוטים להצליח יותר במבחנים.", words:[{en:"regularly",he:"באופן קבוע"},{en:"perform better",he:"להצליח יותר"}] },
+      { en:"Critical thinking skills are essential for academic success.",  he:"כישורי חשיבה ביקורתית חיוניים להצלחה אקדמית.",        words:[{en:"critical thinking",he:"חשיבה ביקורתית"},{en:"essential",he:"חיוניים"},{en:"academic success",he:"הצלחה אקדמית"}] },
+      { en:"The curriculum has been updated to include digital literacy.",   he:"תוכנית הלימודים עודכנה כדי לכלול אוריינות דיגיטלית.",  words:[{en:"curriculum",he:"תוכנית לימודים"},{en:"digital literacy",he:"אוריינות דיגיטלית"}] },
+      { en:"Students who read regularly tend to perform better in exams.",  he:"תלמידים שקוראים באופן קבוע נוטים להצליח יותר במבחנים.",words:[{en:"regularly",he:"באופן קבוע"},{en:"perform better",he:"להצליח יותר"}] },
+      { en:"Project-based learning encourages creativity and collaboration.",he:"למידה מבוססת פרויקטים מעודדת יצירתיות ושיתוף פעולה.",  words:[{en:"Project-based learning",he:"למידה מבוססת פרויקטים"},{en:"creativity",he:"יצירתיות"},{en:"collaboration",he:"שיתוף פעולה"}] },
+      { en:"Peer tutoring programs help both the tutor and the student.",   he:"תוכניות חונכות עמיתים מסייעות גם לחונך וגם לתלמיד.",   words:[{en:"Peer tutoring",he:"חונכות עמיתים"},{en:"tutor",he:"חונך"},{en:"student",he:"תלמיד"}] },
+      { en:"Standardized testing remains a controversial topic in education.",he:"בחינות תקניות נותרות נושא שנוי במחלוקת בחינוך.",      words:[{en:"Standardized testing",he:"בחינות תקניות"},{en:"controversial",he:"שנוי במחלוקת"},{en:"education",he:"חינוך"}] },
+      { en:"Extracurricular activities build leadership and social skills.", he:"פעילויות חוץ בית-ספריות בונות מיומנויות מנהיגות וחברתיות.",words:[{en:"Extracurricular",he:"חוץ בית-ספרי"},{en:"leadership",he:"מנהיגות"},{en:"social skills",he:"מיומנויות חברתיות"}] },
+      { en:"The achievement gap between students reflects broader social inequalities.",he:"פערי ההישגים בין תלמידים משקפים אי-שוויון חברתי רחב יותר.",words:[{en:"achievement gap",he:"פערי הישגים"},{en:"reflects",he:"משקפים"},{en:"inequalities",he:"אי-שוויון"}] },
     ],
   },
   sports: {
     beginner: [
-      { en:"I play football with my friends.", he:"אני משחק כדורגל עם חברים.",          words:[{en:"play football",he:"משחק כדורגל"},{en:"friends",he:"חברים"}] },
-      { en:"She swims in the pool every week.", he:"היא שוחה בבריכה כל שבוע.",          words:[{en:"swims",he:"שוחה"},{en:"pool",he:"בריכה"},{en:"every week",he:"כל שבוע"}] },
-      { en:"Running is good for your health.", he:"ריצה טובה לבריאות שלך.",             words:[{en:"Running",he:"ריצה"},{en:"health",he:"בריאות"}] },
-      { en:"My favorite team won the game.",   he:"הקבוצה האהובה עלי ניצחה במשחק.",    words:[{en:"favorite team",he:"קבוצה אהובה"},{en:"won",he:"ניצחה"}] },
-      { en:"I ride my bicycle in the park.",   he:"אני רוכב על האופניים בפארק.",        words:[{en:"ride",he:"רוכב"},{en:"bicycle",he:"אופניים"},{en:"park",he:"פארק"}] },
+      { en:"I play football with my friends.", he:"אני משחק כדורגל עם חברים.",        words:[{en:"play football",he:"משחק כדורגל"},{en:"friends",he:"חברים"}] },
+      { en:"She swims in the pool every week.",he:"היא שוחה בבריכה כל שבוע.",         words:[{en:"swims",he:"שוחה"},{en:"pool",he:"בריכה"},{en:"every week",he:"כל שבוע"}] },
+      { en:"Running is good for your health.", he:"ריצה טובה לבריאות שלך.",           words:[{en:"Running",he:"ריצה"},{en:"health",he:"בריאות"}] },
+      { en:"My favorite team won the game.",   he:"הקבוצה האהובה עלי ניצחה במשחק.",  words:[{en:"favorite team",he:"קבוצה אהובה"},{en:"won",he:"ניצחה"}] },
+      { en:"I ride my bicycle in the park.",   he:"אני רוכב על האופניים בפארק.",      words:[{en:"ride",he:"רוכב"},{en:"bicycle",he:"אופניים"},{en:"park",he:"פארק"}] },
+      { en:"He scores a goal every match.",    he:"הוא מבקיע שער בכל משחק.",          words:[{en:"scores a goal",he:"מבקיע שער"},{en:"every match",he:"בכל משחק"}] },
+      { en:"We play basketball after school.", he:"אנחנו משחקים כדורסל אחרי בית הספר.",words:[{en:"basketball",he:"כדורסל"},{en:"after school",he:"אחרי בית הספר"}] },
+      { en:"She jumps very high.",             he:"היא קופצת גבוה מאוד.",             words:[{en:"jumps",he:"קופצת"},{en:"very high",he:"גבוה מאוד"}] },
+      { en:"I go jogging every morning.",      he:"אני יוצא לריצה כל בוקר.",          words:[{en:"go jogging",he:"יוצא לריצה"},{en:"every morning",he:"כל בוקר"}] },
+      { en:"The goalkeeper stopped the ball.", he:"השוער עצר את הכדור.",               words:[{en:"goalkeeper",he:"שוער"},{en:"stopped the ball",he:"עצר את הכדור"}] },
+      { en:"We won the match three to one.",   he:"ניצחנו במשחק שלוש לאחד.",          words:[{en:"won the match",he:"ניצחנו"},{en:"three to one",he:"שלוש לאחד"}] },
+      { en:"I wear sports shoes to run.",      he:"אני לובש נעלי ספורט לריצה.",       words:[{en:"sports shoes",he:"נעלי ספורט"},{en:"to run",he:"לריצה"}] },
+      { en:"She trains every day to improve.", he:"היא מתאמנת כל יום כדי להשתפר.",   words:[{en:"trains",he:"מתאמנת"},{en:"every day",he:"כל יום"},{en:"improve",he:"להשתפר"}] },
+      { en:"The referee blew the whistle.",    he:"השופט שרק בשריקה.",                words:[{en:"referee",he:"שופט"},{en:"blew the whistle",he:"שרק בשריקה"}] },
+      { en:"We cheer for our team together.",  he:"אנחנו מעודדים את הקבוצה שלנו יחד.",words:[{en:"cheer",he:"מעודדים"},{en:"team",he:"קבוצה"},{en:"together",he:"יחד"}] },
     ],
     intermediate: [
-      { en:"Basketball requires both skill and teamwork.",              he:"כדורסל דורש הן מיומנות והן עבודת צוות.", words:[{en:"Basketball",he:"כדורסל"},{en:"skill",he:"מיומנות"},{en:"teamwork",he:"עבודת צוות"}] },
-      { en:"The marathon runner finished the race in record time.",     he:"רץ המרתון סיים את המרוץ בזמן שיא.",     words:[{en:"marathon runner",he:"רץ מרתון"},{en:"record time",he:"זמן שיא"}] },
-      { en:"I have been practicing tennis for three years.",            he:"אני מתאמן טניס כבר שלוש שנים.",         words:[{en:"practicing",he:"מתאמן"},{en:"tennis",he:"טניס"},{en:"three years",he:"שלוש שנים"}] },
+      { en:"Basketball requires both skill and teamwork.",             he:"כדורסל דורש הן מיומנות והן עבודת צוות.",words:[{en:"Basketball",he:"כדורסל"},{en:"skill",he:"מיומנות"},{en:"teamwork",he:"עבודת צוות"}] },
+      { en:"The marathon runner finished the race in record time.",    he:"רץ המרתון סיים את המרוץ בזמן שיא.",    words:[{en:"marathon runner",he:"רץ מרתון"},{en:"record time",he:"זמן שיא"}] },
+      { en:"I have been practicing tennis for three years.",           he:"אני מתאמן טניס כבר שלוש שנים.",        words:[{en:"practicing",he:"מתאמן"},{en:"tennis",he:"טניס"},{en:"three years",he:"שלוש שנים"}] },
+      { en:"She broke the national swimming record last week.",        he:"היא שברה את שיא השחייה הלאומי בשבוע שעבר.",words:[{en:"broke",he:"שברה"},{en:"national record",he:"שיא לאומי"},{en:"last week",he:"שבוע שעבר"}] },
+      { en:"The coach gave us advice on how to improve.",              he:"המאמן נתן לנו עצות כיצד להשתפר.",      words:[{en:"coach",he:"מאמן"},{en:"advice",he:"עצות"},{en:"improve",he:"להשתפר"}] },
+      { en:"We trained three times a week to prepare for the tournament.", he:"התאמנו שלוש פעמים בשבוע להכנה לטורניר.",words:[{en:"trained",he:"התאמנו"},{en:"three times a week",he:"שלוש פעמים בשבוע"},{en:"tournament",he:"טורניר"}] },
+      { en:"He became the team captain after showing great leadership.",he:"הוא הפך לקפטן הקבוצה לאחר שגילה מנהיגות נהדרת.",words:[{en:"team captain",he:"קפטן הקבוצה"},{en:"leadership",he:"מנהיגות"}] },
+      { en:"The gym is open from six in the morning to ten at night.", he:"חדר הכושר פתוח משש בבוקר ועד עשר בלילה.",words:[{en:"gym",he:"חדר כושר"},{en:"six in the morning",he:"שש בבוקר"},{en:"ten at night",he:"עשר בלילה"}] },
+      { en:"Stretching before exercise helps prevent injuries.",       he:"מתיחות לפני אימון עוזרות למנוע פציעות.",  words:[{en:"Stretching",he:"מתיחות"},{en:"prevent",he:"למנוע"},{en:"injuries",he:"פציעות"}] },
+      { en:"The audience cheered as she crossed the finish line.",     he:"הקהל עודד כשהיא חצתה את קו הסיום.",     words:[{en:"audience",he:"קהל"},{en:"cheered",he:"עודד"},{en:"finish line",he:"קו סיום"}] },
+      { en:"He signed a contract with a professional football club.",  he:"הוא חתם על חוזה עם מועדון כדורגל מקצועי.",words:[{en:"signed a contract",he:"חתם על חוזה"},{en:"professional",he:"מקצועי"},{en:"football club",he:"מועדון כדורגל"}] },
     ],
     advanced: [
-      { en:"Professional athletes dedicate years to perfecting their technique.", he:"ספורטאים מקצועיים מקדישים שנים לשכלול הטכניקה שלהם.", words:[{en:"Professional athletes",he:"ספורטאים מקצועיים"},{en:"perfecting",he:"שכלול"},{en:"technique",he:"טכניקה"}] },
-      { en:"The Olympic Games unite athletes from around the world.",             he:"המשחקים האולימפיים מאחדים ספורטאים מרחבי העולם.",       words:[{en:"Olympic Games",he:"משחקים אולימפיים"},{en:"unite",he:"מאחדים"}] },
-      { en:"Sports psychology plays a significant role in competitive performance.", he:"פסיכולוגיית ספורט ממלאת תפקיד משמעותי בביצועים תחרותיים.", words:[{en:"psychology",he:"פסיכולוגיה"},{en:"significant role",he:"תפקיד משמעותי"},{en:"competitive",he:"תחרותי"}] },
+      { en:"Professional athletes dedicate years to perfecting their technique.",    he:"ספורטאים מקצועיים מקדישים שנים לשכלול הטכניקה שלהם.",   words:[{en:"Professional athletes",he:"ספורטאים מקצועיים"},{en:"perfecting",he:"שכלול"},{en:"technique",he:"טכניקה"}] },
+      { en:"The Olympic Games unite athletes from around the world.",               he:"המשחקים האולימפיים מאחדים ספורטאים מרחבי העולם.",        words:[{en:"Olympic Games",he:"משחקים אולימפיים"},{en:"unite",he:"מאחדים"}] },
+      { en:"Sports psychology plays a significant role in competitive performance.", he:"פסיכולוגיית ספורט ממלאת תפקיד משמעותי בביצועים תחרותיים.",words:[{en:"psychology",he:"פסיכולוגיה"},{en:"significant role",he:"תפקיד משמעותי"},{en:"competitive",he:"תחרותי"}] },
+      { en:"Doping scandals have damaged the reputation of professional cycling.",   he:"שערוריות סימום פגעו במוניטין של הרכיבה על אופניים המקצועית.",words:[{en:"Doping scandals",he:"שערוריות סימום"},{en:"reputation",he:"מוניטין"},{en:"cycling",he:"רכיבה על אופניים"}] },
+      { en:"The biomechanics of a sprint depend on muscle fiber composition.",       he:"הביומכניקה של ריצת מהירות תלויה בהרכב סיבי השריר.",     words:[{en:"biomechanics",he:"ביומכניקה"},{en:"muscle fiber",he:"סיבי שריר"},{en:"composition",he:"הרכב"}] },
+      { en:"Altitude training increases red blood cell production in athletes.",     he:"אימון בגובה רב מגביר ייצור כדוריות דם אדומות אצל ספורטאים.",words:[{en:"Altitude training",he:"אימון בגובה"},{en:"red blood cell",he:"כדוריות דם אדומות"},{en:"production",he:"ייצור"}] },
+      { en:"Gender equality in sports remains an ongoing global challenge.",         he:"שוויון מגדרי בספורט נותר אתגר עולמי מתמשך.",             words:[{en:"Gender equality",he:"שוויון מגדרי"},{en:"ongoing challenge",he:"אתגר מתמשך"}] },
     ],
   },
   family: {
     beginner: [
-      { en:"My family has four members.",              he:"המשפחה שלי מורכבת מארבעה חברים.",          words:[{en:"family",he:"משפחה"},{en:"four members",he:"ארבעה חברים"}] },
-      { en:"My brother is ten years old.",             he:"אחי בן עשר.",                              words:[{en:"brother",he:"אח"},{en:"ten years old",he:"בן עשר"}] },
-      { en:"We eat dinner together every night.",      he:"אנחנו אוכלים ארוחת ערב יחד כל לילה.",     words:[{en:"dinner",he:"ארוחת ערב"},{en:"together",he:"יחד"},{en:"every night",he:"כל לילה"}] },
-      { en:"My grandmother tells me wonderful stories.", he:"סבתא שלי מספרת לי סיפורים נפלאים.",     words:[{en:"grandmother",he:"סבתא"},{en:"wonderful stories",he:"סיפורים נפלאים"}] },
+      { en:"My family has four members.",               he:"המשפחה שלי מורכבת מארבעה חברים.",         words:[{en:"family",he:"משפחה"},{en:"four members",he:"ארבעה חברים"}] },
+      { en:"My brother is ten years old.",              he:"אחי בן עשר.",                             words:[{en:"brother",he:"אח"},{en:"ten years old",he:"בן עשר"}] },
+      { en:"We eat dinner together every night.",       he:"אנחנו אוכלים ארוחת ערב יחד כל לילה.",    words:[{en:"dinner",he:"ארוחת ערב"},{en:"together",he:"יחד"},{en:"every night",he:"כל לילה"}] },
+      { en:"My grandmother tells me wonderful stories.",he:"סבתא שלי מספרת לי סיפורים נפלאים.",      words:[{en:"grandmother",he:"סבתא"},{en:"wonderful stories",he:"סיפורים נפלאים"}] },
+      { en:"I love my baby sister very much.",          he:"אני אוהב מאוד את אחותי התינוקת.",         words:[{en:"baby sister",he:"אחות תינוקת"},{en:"very much",he:"מאוד"}] },
+      { en:"My father works in an office.",             he:"אבי עובד במשרד.",                          words:[{en:"father",he:"אבא"},{en:"works in an office",he:"עובד במשרד"}] },
+      { en:"We visit our grandparents on weekends.",    he:"אנחנו מבקרים את הסבים בסופי שבוע.",       words:[{en:"visit",he:"מבקרים"},{en:"grandparents",he:"סבים"},{en:"weekends",he:"סופי שבוע"}] },
+      { en:"My mom wakes me up every morning.",         he:"אמא שלי מעירה אותי כל בוקר.",             words:[{en:"mom",he:"אמא"},{en:"wakes me up",he:"מעירה אותי"},{en:"every morning",he:"כל בוקר"}] },
+      { en:"My uncle lives far away from us.",          he:"הדוד שלי גר רחוק מאיתנו.",                words:[{en:"uncle",he:"דוד"},{en:"lives far away",he:"גר רחוק"}] },
+      { en:"We take family photos on holidays.",        he:"אנחנו מצלמים תמונות משפחתיות בחגים.",     words:[{en:"family photos",he:"תמונות משפחתיות"},{en:"holidays",he:"חגים"}] },
+      { en:"My aunt cooks amazing food.",               he:"הדודה שלי מבשלת אוכל מדהים.",             words:[{en:"aunt",he:"דודה"},{en:"amazing food",he:"אוכל מדהים"}] },
+      { en:"My parents hug me before I sleep.",         he:"ההורים שלי מחבקים אותי לפני שאני ישן.",   words:[{en:"parents",he:"הורים"},{en:"hug",he:"מחבקים"},{en:"before I sleep",he:"לפני שאני ישן"}] },
+      { en:"We laugh a lot when the family is together.",he:"אנחנו צוחקים הרבה כשהמשפחה ביחד.",      words:[{en:"laugh",he:"צוחקים"},{en:"together",he:"ביחד"}] },
+      { en:"My cousin is the same age as me.",          he:"הבן דוד שלי בגיל שלי.",                   words:[{en:"cousin",he:"בן דוד"},{en:"same age",he:"אותו גיל"}] },
+      { en:"We have a big family reunion every year.",  he:"יש לנו כינוס משפחתי גדול כל שנה.",        words:[{en:"family reunion",he:"כינוס משפחתי"},{en:"every year",he:"כל שנה"}] },
     ],
     intermediate: [
       { en:"My parents work hard to support our family.", he:"ההורים שלי עובדים קשה כדי לתמוך במשפחה.", words:[{en:"parents",he:"הורים"},{en:"work hard",he:"עובדים קשה"},{en:"support",he:"לתמוך"}] },
-      { en:"We celebrate holidays with the whole family.", he:"אנחנו חוגגים חגים עם כל המשפחה.",         words:[{en:"celebrate",he:"חוגגים"},{en:"holidays",he:"חגים"},{en:"whole family",he:"כל המשפחה"}] },
-      { en:"My sister and I share a bedroom.",            he:"אחותי ואני חולקים חדר שינה.",              words:[{en:"sister",he:"אחות"},{en:"share",he:"חולקים"},{en:"bedroom",he:"חדר שינה"}] },
+      { en:"We celebrate holidays with the whole family.",he:"אנחנו חוגגים חגים עם כל המשפחה.",         words:[{en:"celebrate",he:"חוגגים"},{en:"holidays",he:"חגים"},{en:"whole family",he:"כל המשפחה"}] },
+      { en:"My sister and I share a bedroom.",           he:"אחותי ואני חולקים חדר שינה.",              words:[{en:"sister",he:"אחות"},{en:"share",he:"חולקים"},{en:"bedroom",he:"חדר שינה"}] },
+      { en:"We make decisions together as a family.",    he:"אנחנו מקבלים החלטות יחד כמשפחה.",          words:[{en:"make decisions",he:"מקבלים החלטות"},{en:"together",he:"יחד"}] },
+      { en:"My grandmother taught me how to bake bread.",he:"סבתא שלי לימדה אותי לאפות לחם.",          words:[{en:"taught me",he:"לימדה אותי"},{en:"bake bread",he:"לאפות לחם"}] },
+      { en:"My parents encourage me to follow my dreams.",he:"ההורים שלי מעודדים אותי לרדוף אחר חלומותיי.",words:[{en:"encourage",he:"מעודדים"},{en:"follow my dreams",he:"לרדוף אחר חלומותיי"}] },
+      { en:"We have a family tradition of hiking on weekends.",he:"יש לנו מסורת משפחתית של טיולים רגליים בסופי שבוע.",words:[{en:"tradition",he:"מסורת"},{en:"hiking",he:"טיולים רגליים"},{en:"weekends",he:"סופי שבוע"}] },
+      { en:"My brother helped me with my homework last night.",he:"אחי עזר לי בשיעורי הבית אמש.",         words:[{en:"helped me",he:"עזר לי"},{en:"homework",he:"שיעורי בית"},{en:"last night",he:"אמש"}] },
+      { en:"We argued but then apologized to each other.",  he:"ריבנו אבל אחר כך התנצלנו אחד לשני.",   words:[{en:"argued",he:"ריבנו"},{en:"apologized",he:"התנצלנו"},{en:"each other",he:"אחד לשני"}] },
+      { en:"My father reads bedtime stories to my sister.", he:"אבי קורא לאחותי סיפורים לפני השינה.",   words:[{en:"reads",he:"קורא"},{en:"bedtime stories",he:"סיפורים לפני השינה"}] },
     ],
     advanced: [
-      { en:"Family relationships shape our personality and values.",           he:"יחסי משפחה מעצבים את אישיותנו וערכינו.",                   words:[{en:"relationships",he:"יחסים"},{en:"shape",he:"מעצבים"},{en:"values",he:"ערכים"}] },
-      { en:"Maintaining strong family bonds requires communication and respect.", he:"שמירה על קשרי משפחה חזקים דורשת תקשורת וכבוד.",           words:[{en:"bonds",he:"קשרים"},{en:"communication",he:"תקשורת"},{en:"respect",he:"כבוד"}] },
+      { en:"Family relationships shape our personality and values.",          he:"יחסי משפחה מעצבים את אישיותנו וערכינו.",                  words:[{en:"relationships",he:"יחסים"},{en:"shape",he:"מעצבים"},{en:"values",he:"ערכים"}] },
+      { en:"Maintaining strong family bonds requires communication and respect.",he:"שמירה על קשרי משפחה חזקים דורשת תקשורת וכבוד.",          words:[{en:"bonds",he:"קשרים"},{en:"communication",he:"תקשורת"},{en:"respect",he:"כבוד"}] },
+      { en:"Blended families face unique challenges and opportunities.",       he:"משפחות ממוזגות מתמודדות עם אתגרים והזדמנויות ייחודיים.",  words:[{en:"Blended families",he:"משפחות ממוזגות"},{en:"unique challenges",he:"אתגרים ייחודיים"},{en:"opportunities",he:"הזדמנויות"}] },
+      { en:"Intergenerational trauma can affect family dynamics for decades.", he:"טראומה בין-דורית יכולה להשפיע על הדינמיקה המשפחתית לעשרות שנים.", words:[{en:"Intergenerational",he:"בין-דורי"},{en:"trauma",he:"טראומה"},{en:"family dynamics",he:"דינמיקה משפחתית"}] },
+      { en:"Cultural heritage is often preserved and passed down within families.",he:"מורשת תרבותית לעיתים קרובות נשמרת ומועברת בתוך משפחות.", words:[{en:"Cultural heritage",he:"מורשת תרבותית"},{en:"preserved",he:"נשמרת"},{en:"passed down",he:"מועברת"}] },
     ],
   },
   colors: {
     beginner: [
-      { en:"The sky is blue and the grass is green.", he:"השמיים כחולים והדשא ירוק.",       words:[{en:"sky",he:"שמיים"},{en:"blue",he:"כחול"},{en:"green",he:"ירוק"}] },
-      { en:"I see a big red circle.",                he:"אני רואה עיגול אדום גדול.",        words:[{en:"circle",he:"עיגול"},{en:"red",he:"אדום"},{en:"big",he:"גדול"}] },
-      { en:"My favorite color is purple.",           he:"הצבע האהוב עלי הוא סגול.",        words:[{en:"color",he:"צבע"},{en:"purple",he:"סגול"}] },
-      { en:"The triangle is yellow and small.",      he:"המשולש צהוב וקטן.",               words:[{en:"triangle",he:"משולש"},{en:"yellow",he:"צהוב"},{en:"small",he:"קטן"}] },
+      { en:"The sky is blue and the grass is green.", he:"השמיים כחולים והדשא ירוק.",     words:[{en:"sky",he:"שמיים"},{en:"blue",he:"כחול"},{en:"green",he:"ירוק"}] },
+      { en:"I see a big red circle.",                he:"אני רואה עיגול אדום גדול.",       words:[{en:"circle",he:"עיגול"},{en:"red",he:"אדום"},{en:"big",he:"גדול"}] },
+      { en:"My favorite color is purple.",           he:"הצבע האהוב עלי הוא סגול.",       words:[{en:"color",he:"צבע"},{en:"purple",he:"סגול"}] },
+      { en:"The triangle is yellow and small.",      he:"המשולש צהוב וקטן.",              words:[{en:"triangle",he:"משולש"},{en:"yellow",he:"צהוב"},{en:"small",he:"קטן"}] },
+      { en:"I paint with blue and red.",             he:"אני מצייר בכחול ואדום.",          words:[{en:"paint",he:"מצייר"},{en:"blue and red",he:"כחול ואדום"}] },
+      { en:"The flower is pink and beautiful.",      he:"הפרח ורוד ויפה.",                 words:[{en:"flower",he:"פרח"},{en:"pink",he:"ורוד"},{en:"beautiful",he:"יפה"}] },
+      { en:"I wear an orange shirt today.",          he:"אני לובש חולצה כתומה היום.",      words:[{en:"orange shirt",he:"חולצה כתומה"},{en:"today",he:"היום"}] },
+      { en:"The blackboard is black and white.",     he:"הלוח שחור ולבן.",                words:[{en:"blackboard",he:"לוח"},{en:"black and white",he:"שחור ולבן"}] },
+      { en:"She colored the star bright gold.",      he:"היא צבעה את הכוכב זהב מבריק.",   words:[{en:"colored",he:"צבעה"},{en:"star",he:"כוכב"},{en:"bright gold",he:"זהב מבריק"}] },
+      { en:"The bus is yellow and very big.",        he:"האוטובוס צהוב וגדול מאוד.",       words:[{en:"bus",he:"אוטובוס"},{en:"yellow",he:"צהוב"},{en:"very big",he:"גדול מאוד"}] },
+      { en:"The leaves turn orange in autumn.",      he:"העלים הופכים כתומים בסתיו.",      words:[{en:"leaves",he:"עלים"},{en:"turn orange",he:"הופכים כתומים"},{en:"autumn",he:"סתיו"}] },
+      { en:"I mix blue and yellow to make green.",   he:"אני מערבב כחול וצהוב כדי לעשות ירוק.",words:[{en:"mix",he:"מערבב"},{en:"blue and yellow",he:"כחול וצהוב"},{en:"green",he:"ירוק"}] },
+      { en:"The night sky is dark and full of stars.",he:"שמיים הלילה אפלים ומלאים בכוכבים.",words:[{en:"night sky",he:"שמיי הלילה"},{en:"dark",he:"אפלים"},{en:"stars",he:"כוכבים"}] },
+      { en:"Brown bears live in the forest.",        he:"דובי חום חיים ביער.",             words:[{en:"Brown bears",he:"דובי חום"},{en:"live",he:"חיים"},{en:"forest",he:"יער"}] },
+      { en:"The gray elephant splashed in the water.",he:"הפיל האפור התיז מים.",           words:[{en:"gray elephant",he:"פיל אפור"},{en:"splashed",he:"התיז מים"}] },
     ],
     intermediate: [
-      { en:"The rainbow has seven beautiful colors.",         he:"לקשת יש שבעה צבעים יפים.",             words:[{en:"rainbow",he:"קשת"},{en:"seven",he:"שבעה"},{en:"beautiful",he:"יפים"}] },
-      { en:"Artists mix colors to create new shades.",       he:"אמנים מערבבים צבעים כדי ליצור גוונים חדשים.", words:[{en:"Artists",he:"אמנים"},{en:"mix",he:"מערבבים"},{en:"shades",he:"גוונים"}] },
-      { en:"The painting has orange and brown patterns.",    he:"לציור יש דוגמאות בכתום וחום.",         words:[{en:"painting",he:"ציור"},{en:"orange",he:"כתום"},{en:"brown",he:"חום"}] },
+      { en:"The rainbow has seven beautiful colors.",       he:"לקשת יש שבעה צבעים יפים.",            words:[{en:"rainbow",he:"קשת"},{en:"seven",he:"שבעה"},{en:"beautiful",he:"יפים"}] },
+      { en:"Artists mix colors to create new shades.",     he:"אמנים מערבבים צבעים כדי ליצור גוונים חדשים.", words:[{en:"Artists",he:"אמנים"},{en:"mix",he:"מערבבים"},{en:"shades",he:"גוונים"}] },
+      { en:"The painting has orange and brown patterns.",  he:"לציור יש דוגמאות בכתום וחום.",        words:[{en:"painting",he:"ציור"},{en:"orange",he:"כתום"},{en:"brown",he:"חום"}] },
+      { en:"Warm colors like red and orange energize us.", he:"צבעים חמים כמו אדום וכתום מעוררים אותנו.",words:[{en:"Warm colors",he:"צבעים חמים"},{en:"energize",he:"מעוררים"}] },
+      { en:"Interior designers use color to change how a room feels.", he:"מעצבי פנים משתמשים בצבע כדי לשנות את תחושת החדר.", words:[{en:"Interior designers",he:"מעצבי פנים"},{en:"color",he:"צבע"},{en:"room feels",he:"תחושת החדר"}] },
+      { en:"Blue and purple are often associated with royalty.",he:"כחול וסגול קשורים לעיתים קרובות ללויאליות.",words:[{en:"Blue and purple",he:"כחול וסגול"},{en:"associated",he:"קשורים"},{en:"royalty",he:"לויאליות"}] },
+      { en:"The sunset painted the sky in shades of pink and orange.", he:"השקיעה צבעה את השמיים בגוונים של ורוד וכתום.", words:[{en:"sunset",he:"שקיעה"},{en:"painted the sky",he:"צבעה את השמיים"},{en:"shades",he:"גוונים"}] },
+      { en:"Neon colors are very bright and easy to notice.", he:"צבעי ניאון עזים מאוד וקל להבחין בהם.", words:[{en:"Neon colors",he:"צבעי ניאון"},{en:"bright",he:"עזים"},{en:"easy to notice",he:"קל להבחין"}] },
     ],
     advanced: [
       { en:"Color psychology influences human emotions and behavior significantly.", he:"פסיכולוגיית הצבע משפיעה על רגשות והתנהגות אנושיים.", words:[{en:"Color psychology",he:"פסיכולוגיית צבע"},{en:"influences",he:"משפיעה"},{en:"emotions",he:"רגשות"}] },
+      { en:"The physics of light explains why we perceive different wavelengths as colors.", he:"פיזיקת האור מסבירה מדוע אנו תופסים אורכי גל שונים כצבעים.", words:[{en:"physics of light",he:"פיזיקת האור"},{en:"perceive",he:"תופסים"},{en:"wavelengths",he:"אורכי גל"}] },
+      { en:"Cultural associations with colors vary significantly across different societies.", he:"הקשרים תרבותיים עם צבעים משתנים משמעותית בין חברות שונות.", words:[{en:"Cultural associations",he:"הקשרים תרבותיים"},{en:"vary",he:"משתנים"},{en:"societies",he:"חברות"}] },
+      { en:"Color blindness affects the ability to distinguish between certain hues.", he:"עיוורון צבעים משפיע על היכולת להבחין בין גוונים מסוימים.", words:[{en:"Color blindness",he:"עיוורון צבעים"},{en:"distinguish",he:"להבחין"},{en:"hues",he:"גוונים"}] },
     ],
   },
   weather: {
     beginner: [
-      { en:"Today is sunny and warm.",      he:"היום שמשי וחם.",              words:[{en:"sunny",he:"שמשי"},{en:"warm",he:"חם"}] },
-      { en:"It is raining outside.",        he:"גשם יורד בחוץ.",             words:[{en:"raining",he:"גשם יורד"},{en:"outside",he:"בחוץ"}] },
-      { en:"I need my umbrella today.",     he:"אני צריך מטריה היום.",        words:[{en:"umbrella",he:"מטריה"},{en:"today",he:"היום"}] },
-      { en:"The wind is very strong.",      he:"הרוח מאוד חזקה.",            words:[{en:"wind",he:"רוח"},{en:"strong",he:"חזקה"}] },
+      { en:"Today is sunny and warm.",       he:"היום שמשי וחם.",             words:[{en:"sunny",he:"שמשי"},{en:"warm",he:"חם"}] },
+      { en:"It is raining outside.",         he:"גשם יורד בחוץ.",            words:[{en:"raining",he:"גשם יורד"},{en:"outside",he:"בחוץ"}] },
+      { en:"I need my umbrella today.",      he:"אני צריך מטריה היום.",       words:[{en:"umbrella",he:"מטריה"},{en:"today",he:"היום"}] },
+      { en:"The wind is very strong.",       he:"הרוח מאוד חזקה.",           words:[{en:"wind",he:"רוח"},{en:"strong",he:"חזקה"}] },
+      { en:"It snows in winter.",            he:"יורד שלג בחורף.",           words:[{en:"snows",he:"שלג יורד"},{en:"winter",he:"חורף"}] },
+      { en:"The sun is shining brightly.",   he:"השמש זורחת בהירות.",        words:[{en:"sun",he:"שמש"},{en:"shining brightly",he:"זורחת בהירות"}] },
+      { en:"We wore warm coats in the cold.",he:"לבשנו מעילים חמים בקור.",   words:[{en:"warm coats",he:"מעילים חמים"},{en:"in the cold",he:"בקור"}] },
+      { en:"The fog made it hard to see.",   he:"הערפל הקשה לראות.",          words:[{en:"fog",he:"ערפל"},{en:"hard to see",he:"קשה לראות"}] },
+      { en:"It is cloudy and a bit cold.",   he:"יש עננים וקצת קר.",          words:[{en:"cloudy",he:"עננים"},{en:"cold",he:"קר"}] },
+      { en:"We stayed inside during the storm.",he:"נשארנו בפנים במהלך הסערה.",words:[{en:"stayed inside",he:"נשארנו בפנים"},{en:"storm",he:"סערה"}] },
+      { en:"The weather is perfect for a picnic.",he:"מזג האוויר מושלם לפיקניק.",words:[{en:"perfect",he:"מושלם"},{en:"picnic",he:"פיקניק"}] },
+      { en:"Thunder scared my little sister.", he:"הרעם הפחיד את אחותי הקטנה.", words:[{en:"Thunder",he:"רעם"},{en:"scared",he:"הפחיד"},{en:"little sister",he:"אחות קטנה"}] },
+      { en:"After the rain, a rainbow appeared.", he:"לאחר הגשם הופיעה קשת.",  words:[{en:"After the rain",he:"לאחר הגשם"},{en:"rainbow appeared",he:"קשת הופיעה"}] },
+      { en:"The ice on the road was dangerous.",  he:"הקרח על הכביש היה מסוכן.", words:[{en:"ice",he:"קרח"},{en:"road",he:"כביש"},{en:"dangerous",he:"מסוכן"}] },
+      { en:"Spring is my favorite season.",   he:"האביב הוא העונה האהובה עלי.",words:[{en:"Spring",he:"אביב"},{en:"favorite season",he:"עונה אהובה"}] },
     ],
     intermediate: [
-      { en:"The weather forecast says it will snow tomorrow.",  he:"תחזית מזג האוויר אומרת שיהיה שלג מחר.", words:[{en:"weather forecast",he:"תחזית מזג אוויר"},{en:"snow",he:"שלג"},{en:"tomorrow",he:"מחר"}] },
-      { en:"After the storm, there was a beautiful rainbow.",   he:"אחרי הסערה הייתה קשת יפהפייה.",         words:[{en:"storm",he:"סערה"},{en:"rainbow",he:"קשת"}] },
+      { en:"The weather forecast says it will snow tomorrow.", he:"תחזית מזג האוויר אומרת שיהיה שלג מחר.", words:[{en:"weather forecast",he:"תחזית מזג אוויר"},{en:"snow",he:"שלג"},{en:"tomorrow",he:"מחר"}] },
+      { en:"After the storm, there was a beautiful rainbow.",  he:"אחרי הסערה הייתה קשת יפהפייה.",         words:[{en:"storm",he:"סערה"},{en:"rainbow",he:"קשת"}] },
       { en:"Temperatures drop significantly during winter nights.", he:"הטמפרטורות יורדות משמעותית בלילות החורף.", words:[{en:"Temperatures",he:"טמפרטורות"},{en:"drop",he:"יורדות"},{en:"winter nights",he:"לילות חורף"}] },
+      { en:"Humidity makes hot weather feel even more uncomfortable.", he:"לחות הופכת מזג אוויר חם לאי-נוח עוד יותר.", words:[{en:"Humidity",he:"לחות"},{en:"uncomfortable",he:"אי-נוח"}] },
+      { en:"We experienced a severe heatwave last summer.",   he:"חווינו גל חום קשה בקיץ האחרון.",         words:[{en:"severe heatwave",he:"גל חום קשה"},{en:"last summer",he:"קיץ האחרון"}] },
+      { en:"The mountain peak was covered in thick snow.",    he:"פסגת ההר הייתה מכוסה בשלג עבה.",         words:[{en:"mountain peak",he:"פסגת ההר"},{en:"covered in",he:"מכוסה ב"},{en:"thick snow",he:"שלג עבה"}] },
+      { en:"A tornado touched down near the town yesterday.", he:"טורנדו נגע בקרקע ליד העיר אתמול.",       words:[{en:"tornado",he:"טורנדו"},{en:"touched down",he:"נגע בקרקע"},{en:"yesterday",he:"אתמול"}] },
+      { en:"Spring brings warmer days and blooming flowers.", he:"האביב מביא ימים חמים יותר ופרחים פורחים.",words:[{en:"Spring brings",he:"האביב מביא"},{en:"blooming flowers",he:"פרחים פורחים"}] },
+      { en:"The coastal city often experiences strong sea winds.", he:"העיר החופית חווה לעיתים קרובות רוחות ים חזקות.", words:[{en:"coastal city",he:"עיר חופית"},{en:"sea winds",he:"רוחות ים"}] },
     ],
     advanced: [
-      { en:"Climate change is causing more extreme weather events worldwide.",         he:"שינויי אקלים גורמים לאירועי מזג אוויר קיצוניים יותר ברחבי העולם.", words:[{en:"Climate change",he:"שינויי אקלים"},{en:"extreme",he:"קיצוניים"},{en:"worldwide",he:"ברחבי העולם"}] },
-      { en:"Meteorologists use advanced technology to predict weather patterns.",      he:"מטאורולוגים משתמשים בטכנולוגיה מתקדמת לחיזוי דפוסי מזג האוויר.",  words:[{en:"Meteorologists",he:"מטאורולוגים"},{en:"predict",he:"לחזות"},{en:"weather patterns",he:"דפוסי מזג אוויר"}] },
+      { en:"Climate change is causing more extreme weather events worldwide.",    he:"שינויי אקלים גורמים לאירועי מזג אוויר קיצוניים יותר ברחבי העולם.", words:[{en:"Climate change",he:"שינויי אקלים"},{en:"extreme",he:"קיצוניים"},{en:"worldwide",he:"ברחבי העולם"}] },
+      { en:"Meteorologists use advanced technology to predict weather patterns.", he:"מטאורולוגים משתמשים בטכנולוגיה מתקדמת לחיזוי דפוסי מזג האוויר.",  words:[{en:"Meteorologists",he:"מטאורולוגים"},{en:"predict",he:"לחזות"},{en:"weather patterns",he:"דפוסי מזג אוויר"}] },
+      { en:"El Niño disrupts global weather patterns and affects agriculture.",   he:"אל ניניו משבש דפוסי מזג אוויר עולמיים ומשפיע על החקלאות.",         words:[{en:"El Niño",he:"אל ניניו"},{en:"disrupts",he:"משבש"},{en:"agriculture",he:"חקלאות"}] },
+      { en:"Rising sea levels threaten coastal communities around the world.",    he:"עליית פני הים מאיימת על קהילות חוף ברחבי העולם.",                  words:[{en:"Rising sea levels",he:"עליית פני הים"},{en:"threaten",he:"מאיימת"},{en:"coastal communities",he:"קהילות חוף"}] },
+      { en:"The jet stream influences temperature and precipitation across continents.", he:"זרם הסילון משפיע על טמפרטורה ומשקעים ביבשות.", words:[{en:"jet stream",he:"זרם סילון"},{en:"precipitation",he:"משקעים"},{en:"continents",he:"יבשות"}] },
     ],
   },
   travel: {
     beginner: [
-      { en:"I want to visit Paris one day.", he:"אני רוצה לבקר בפריז יום אחד.", words:[{en:"visit",he:"לבקר"},{en:"Paris",he:"פריז"},{en:"one day",he:"יום אחד"}] },
-      { en:"We take the train to the city.",  he:"אנחנו לוקחים רכבת לעיר.",    words:[{en:"train",he:"רכבת"},{en:"city",he:"עיר"}] },
-      { en:"My passport is in my bag.",       he:"הדרכון שלי נמצא בתיק.",       words:[{en:"passport",he:"דרכון"},{en:"bag",he:"תיק"}] },
+      { en:"I want to visit Paris one day.",  he:"אני רוצה לבקר בפריז יום אחד.", words:[{en:"visit",he:"לבקר"},{en:"Paris",he:"פריז"},{en:"one day",he:"יום אחד"}] },
+      { en:"We take the train to the city.",  he:"אנחנו לוקחים רכבת לעיר.",     words:[{en:"train",he:"רכבת"},{en:"city",he:"עיר"}] },
+      { en:"My passport is in my bag.",       he:"הדרכון שלי נמצא בתיק.",        words:[{en:"passport",he:"דרכון"},{en:"bag",he:"תיק"}] },
+      { en:"We go on a trip every summer.",   he:"אנחנו יוצאים לטיול כל קיץ.",   words:[{en:"go on a trip",he:"יוצאים לטיול"},{en:"every summer",he:"כל קיץ"}] },
+      { en:"The airplane flies very fast.",   he:"המטוס טס מהר מאוד.",           words:[{en:"airplane",he:"מטוס"},{en:"flies very fast",he:"טס מהר מאוד"}] },
+      { en:"We sleep in a hotel near the sea.",he:"אנחנו ישנים במלון ליד הים.",  words:[{en:"sleep in a hotel",he:"ישנים במלון"},{en:"near the sea",he:"ליד הים"}] },
+      { en:"I take photos of everything I see.",he:"אני מצלם כל דבר שאני רואה.", words:[{en:"take photos",he:"מצלם"},{en:"everything I see",he:"כל מה שאני רואה"}] },
+      { en:"The bus station is not far from here.", he:"תחנת האוטובוס לא רחוקה מכאן.", words:[{en:"bus station",he:"תחנת אוטובוס"},{en:"not far",he:"לא רחוק"}] },
+      { en:"We bought souvenirs for our friends.", he:"קנינו מזכרות לחברים שלנו.",  words:[{en:"bought souvenirs",he:"קנינו מזכרות"},{en:"friends",he:"חברים"}] },
+      { en:"The map helped us find the museum.",   he:"המפה עזרה לנו למצוא את המוזיאון.", words:[{en:"map",he:"מפה"},{en:"helped us find",he:"עזרה לנו למצוא"},{en:"museum",he:"מוזיאון"}] },
+      { en:"I speak a little French when I travel.", he:"אני מדבר קצת צרפתית כשאני נוסע.", words:[{en:"speak",he:"מדבר"},{en:"French",he:"צרפתית"},{en:"when I travel",he:"כשאני נוסע"}] },
+      { en:"The sea was calm and beautiful.",    he:"הים היה שקט ויפה.",           words:[{en:"sea",he:"ים"},{en:"calm",he:"שקט"},{en:"beautiful",he:"יפה"}] },
     ],
     intermediate: [
-      { en:"We booked a hotel near the beach for our vacation.", he:"הזמנו מלון ליד הים לחופשה שלנו.",     words:[{en:"booked",he:"הזמנו"},{en:"hotel",he:"מלון"},{en:"vacation",he:"חופשה"}] },
-      { en:"The flight from Tel Aviv to London takes five hours.", he:"הטיסה מתל אביב ללונדון לוקחת חמש שעות.", words:[{en:"flight",he:"טיסה"},{en:"five hours",he:"חמש שעות"}] },
-      { en:"Traveling opens your mind to different cultures.",   he:"טיולים פותחים את הנפש לתרבויות שונות.", words:[{en:"Traveling",he:"טיולים"},{en:"cultures",he:"תרבויות"}] },
+      { en:"We booked a hotel near the beach for our vacation.",     he:"הזמנו מלון ליד הים לחופשה שלנו.",      words:[{en:"booked",he:"הזמנו"},{en:"hotel",he:"מלון"},{en:"vacation",he:"חופשה"}] },
+      { en:"The flight from Tel Aviv to London takes five hours.",   he:"הטיסה מתל אביב ללונדון לוקחת חמש שעות.",words:[{en:"flight",he:"טיסה"},{en:"five hours",he:"חמש שעות"}] },
+      { en:"Traveling opens your mind to different cultures.",       he:"טיולים פותחים את הנפש לתרבויות שונות.", words:[{en:"Traveling",he:"טיולים"},{en:"cultures",he:"תרבויות"}] },
+      { en:"We rented a car and drove along the coastline.",         he:"שכרנו מכונית ונסענו לאורך קו החוף.",    words:[{en:"rented a car",he:"שכרנו מכונית"},{en:"coastline",he:"קו חוף"}] },
+      { en:"She packed light to avoid extra baggage fees.",          he:"היא ארזה קלות כדי להימנע מדמי מטען נוספים.",words:[{en:"packed light",he:"ארזה קלות"},{en:"baggage fees",he:"דמי מטען"}] },
+      { en:"The tour guide showed us the hidden gems of the city.",  he:"המדריך הראה לנו את אוצרות הנסתר של העיר.",words:[{en:"tour guide",he:"מדריך"},{en:"hidden gems",he:"אוצרות נסתרים"}] },
+      { en:"We exchanged currency at the airport before our trip.",  he:"המרנו מטבע בשדה התעופה לפני הטיול.",    words:[{en:"exchanged currency",he:"המרנו מטבע"},{en:"airport",he:"שדה תעופה"}] },
+      { en:"I keep a travel journal to remember every experience.",  he:"אני שומר יומן טיול לזכור כל חוויה.",    words:[{en:"travel journal",he:"יומן טיול"},{en:"remember",he:"לזכור"},{en:"experience",he:"חוויה"}] },
+      { en:"The local market was full of exotic spices and crafts.", he:"השוק המקומי היה מלא בתבלינים אקזוטיים ומלאכת יד.",words:[{en:"local market",he:"שוק מקומי"},{en:"exotic spices",he:"תבלינים אקזוטיים"},{en:"crafts",he:"מלאכת יד"}] },
+      { en:"We missed our connecting flight due to a delay.",        he:"פספסנו את הטיסה המקשרת בגלל עיכוב.",    words:[{en:"missed",he:"פספסנו"},{en:"connecting flight",he:"טיסה מקשרת"},{en:"delay",he:"עיכוב"}] },
     ],
     advanced: [
       { en:"Sustainable tourism aims to minimize environmental impact while benefiting local communities.", he:"תיירות בת קיימא שואפת למזער פגיעה סביבתית תוך תועלת לקהילות מקומיות.", words:[{en:"Sustainable tourism",he:"תיירות בת קיימא"},{en:"minimize",he:"למזער"},{en:"environmental impact",he:"פגיעה סביבתית"}] },
+      { en:"Over-tourism threatens the authenticity of cultural heritage sites.", he:"תיירות יתר מאיימת על האותנטיות של אתרי מורשת תרבותית.", words:[{en:"Over-tourism",he:"תיירות יתר"},{en:"authenticity",he:"אותנטיות"},{en:"heritage sites",he:"אתרי מורשת"}] },
+      { en:"Budget travelers use creative strategies to explore the world affordably.", he:"מטיילים על תקציב משתמשים באסטרטגיות יצירתיות לחקור את העולם בזול.",words:[{en:"Budget travelers",he:"מטיילים על תקציב"},{en:"creative strategies",he:"אסטרטגיות יצירתיות"},{en:"affordably",he:"בזול"}] },
+      { en:"The rise of digital nomads is reshaping how people think about work and travel.", he:"עלייתם של נוודים דיגיטליים משנה את אופן המחשבה על עבודה וטיולים.",words:[{en:"digital nomads",he:"נוודים דיגיטליים"},{en:"reshaping",he:"משנה"},{en:"work and travel",he:"עבודה וטיולים"}] },
     ],
   },
   technology: {
@@ -838,31 +1074,73 @@ const SENTENCES = {
       { en:"I use my phone every day.",        he:"אני משתמש בטלפון שלי כל יום.", words:[{en:"phone",he:"טלפון"},{en:"every day",he:"כל יום"}] },
       { en:"The computer is on the desk.",     he:"המחשב נמצא על השולחן.",        words:[{en:"computer",he:"מחשב"},{en:"desk",he:"שולחן"}] },
       { en:"I watch videos on the internet.",  he:"אני צופה בסרטונים באינטרנט.",  words:[{en:"watch videos",he:"צופה בסרטונים"},{en:"internet",he:"אינטרנט"}] },
+      { en:"We play games on the tablet.",     he:"אנחנו משחקים משחקים על הטאבלט.",words:[{en:"play games",he:"משחקים משחקים"},{en:"tablet",he:"טאבלט"}] },
+      { en:"I send a message to my friend.",   he:"אני שולח הודעה לחבר שלי.",     words:[{en:"send a message",he:"שולח הודעה"},{en:"friend",he:"חבר"}] },
+      { en:"My headphones are wireless.",      he:"האוזניות שלי הן אלחוטיות.",    words:[{en:"headphones",he:"אוזניות"},{en:"wireless",he:"אלחוטיות"}] },
+      { en:"The printer ran out of ink.",      he:"למדפסת נגמרה הדיו.",            words:[{en:"printer",he:"מדפסת"},{en:"ran out of ink",he:"נגמרה הדיו"}] },
+      { en:"I charge my phone every night.",   he:"אני טוען את הטלפון שלי כל לילה.",words:[{en:"charge",he:"טוען"},{en:"every night",he:"כל לילה"}] },
+      { en:"She uses a camera to take pictures.",he:"היא משתמשת במצלמה לצילום.",  words:[{en:"uses a camera",he:"משתמשת במצלמה"},{en:"take pictures",he:"לצילום"}] },
+      { en:"The robot helped clean the house.", he:"הרובוט עזר לנקות את הבית.",   words:[{en:"robot",he:"רובוט"},{en:"helped clean",he:"עזר לנקות"},{en:"house",he:"בית"}] },
+      { en:"I downloaded a new app today.",     he:"הורדתי אפליקציה חדשה היום.",  words:[{en:"downloaded",he:"הורדתי"},{en:"new app",he:"אפליקציה חדשה"},{en:"today",he:"היום"}] },
+      { en:"The screen broke and needs repair.",he:"המסך נשבר וצריך תיקון.",       words:[{en:"screen",he:"מסך"},{en:"broke",he:"נשבר"},{en:"repair",he:"תיקון"}] },
     ],
     intermediate: [
       { en:"Smartphones have changed the way we communicate.",  he:"סמארטפונים שינו את הדרך שבה אנו מתקשרים.", words:[{en:"Smartphones",he:"סמארטפונים"},{en:"communicate",he:"מתקשרים"}] },
       { en:"I learned to code using online tutorials.",         he:"למדתי לתכנת בעזרת מדריכים מקוונים.",       words:[{en:"code",he:"לתכנת"},{en:"online tutorials",he:"מדריכים מקוונים"}] },
       { en:"The app stores your data in the cloud.",            he:"האפליקציה שומרת את הנתונים שלך בענן.",     words:[{en:"app",he:"אפליקציה"},{en:"data",he:"נתונים"},{en:"cloud",he:"ענן"}] },
+      { en:"Social media platforms connect people across the globe.", he:"פלטפורמות מדיה חברתית מחברות אנשים ברחבי העולם.", words:[{en:"Social media",he:"מדיה חברתית"},{en:"connect people",he:"מחברות אנשים"},{en:"globe",he:"כדור הארץ"}] },
+      { en:"She designed a website for her school project.",    he:"היא עיצבה אתר אינטרנט לפרויקט בית הספר שלה.", words:[{en:"designed a website",he:"עיצבה אתר"},{en:"school project",he:"פרויקט בית ספר"}] },
+      { en:"Electric cars are becoming more popular each year.", he:"מכוניות חשמליות הופכות פופולריות יותר מדי שנה.", words:[{en:"Electric cars",he:"מכוניות חשמליות"},{en:"popular",he:"פופולריות"},{en:"each year",he:"מדי שנה"}] },
+      { en:"Virtual reality headsets create immersive experiences.", he:"אוזניות מציאות מדומה יוצרות חוויות סוחפות.", words:[{en:"Virtual reality",he:"מציאות מדומה"},{en:"immersive",he:"סוחפות"},{en:"experiences",he:"חוויות"}] },
+      { en:"Hackers stole personal data from millions of users.", he:"האקרים גנבו נתונים אישיים ממיליוני משתמשים.", words:[{en:"Hackers",he:"האקרים"},{en:"stole",he:"גנבו"},{en:"personal data",he:"נתונים אישיים"}] },
+      { en:"Three-dimensional printers can now create objects from plastic and metal.", he:"מדפסות תלת-ממד יכולות כעת ליצור עצמים מפלסטיק ומתכת.", words:[{en:"Three-dimensional printers",he:"מדפסות תלת-ממד"},{en:"create objects",he:"ליצור עצמים"},{en:"plastic and metal",he:"פלסטיק ומתכת"}] },
+      { en:"GPS technology helps us navigate unfamiliar cities.",  he:"טכנולוגיית GPS עוזרת לנו להתמצא בערים לא מוכרות.", words:[{en:"GPS technology",he:"טכנולוגיית GPS"},{en:"navigate",he:"להתמצא"},{en:"unfamiliar",he:"לא מוכר"}] },
     ],
     advanced: [
-      { en:"Artificial intelligence is transforming industries across the globe.",      he:"בינה מלאכותית משנה תעשיות ברחבי הגלובוס.",             words:[{en:"Artificial intelligence",he:"בינה מלאכותית"},{en:"transforming",he:"משנה"},{en:"industries",he:"תעשיות"}] },
-      { en:"Cybersecurity threats require constant vigilance from organizations.",      he:"איומי סייבר מחייבים ערנות מתמדת מארגונים.",            words:[{en:"Cybersecurity",he:"סייבר"},{en:"vigilance",he:"ערנות"},{en:"organizations",he:"ארגונים"}] },
+      { en:"Artificial intelligence is transforming industries across the globe.",       he:"בינה מלאכותית משנה תעשיות ברחבי הגלובוס.",                words:[{en:"Artificial intelligence",he:"בינה מלאכותית"},{en:"transforming",he:"משנה"},{en:"industries",he:"תעשיות"}] },
+      { en:"Cybersecurity threats require constant vigilance from organizations.",       he:"איומי סייבר מחייבים ערנות מתמדת מארגונים.",               words:[{en:"Cybersecurity",he:"סייבר"},{en:"vigilance",he:"ערנות"},{en:"organizations",he:"ארגונים"}] },
       { en:"Quantum computing promises to solve problems beyond current capabilities.", he:"מחשוב קוונטי מבטיח לפתור בעיות מעבר ליכולות הנוכחיות.", words:[{en:"Quantum computing",he:"מחשוב קוונטי"},{en:"capabilities",he:"יכולות"}] },
+      { en:"Machine learning algorithms improve through exposure to large datasets.",    he:"אלגוריתמים של למידת מכונה משתפרים דרך חשיפה לנתונים גדולים.", words:[{en:"Machine learning",he:"למידת מכונה"},{en:"algorithms",he:"אלגוריתמים"},{en:"datasets",he:"מאגרי נתונים"}] },
+      { en:"The ethical implications of autonomous weapons systems are hotly debated.", he:"ההשלכות האתיות של מערכות נשק אוטונומיות נויידות בוויכוחים.",words:[{en:"ethical implications",he:"השלכות אתיות"},{en:"autonomous",he:"אוטונומי"},{en:"debated",he:"מתויכח"}] },
+      { en:"Blockchain technology offers a decentralized approach to data security.",   he:"טכנולוגיית בלוקצ'יין מציעה גישה מבוזרת לאבטחת מידע.",      words:[{en:"Blockchain",he:"בלוקצ'יין"},{en:"decentralized",he:"מבוזרת"},{en:"data security",he:"אבטחת מידע"}] },
     ],
   },
   hobbies: {
     beginner: [
-      { en:"I love to read books in the evening.",     he:"אני אוהב לקרוא ספרים בערב.",         words:[{en:"read books",he:"לקרוא ספרים"},{en:"evening",he:"ערב"}] },
-      { en:"My hobby is drawing cartoon characters.",  he:"התחביב שלי הוא ציור דמויות קומיקס.", words:[{en:"hobby",he:"תחביב"},{en:"drawing",he:"ציור"},{en:"cartoon",he:"קומיקס"}] },
-      { en:"We play board games on weekends.",         he:"אנחנו משחקים משחקי קופסה בסופי שבוע.", words:[{en:"board games",he:"משחקי קופסה"},{en:"weekends",he:"סופי שבוע"}] },
+      { en:"I love to read books in the evening.",    he:"אני אוהב לקרוא ספרים בערב.",          words:[{en:"read books",he:"לקרוא ספרים"},{en:"evening",he:"ערב"}] },
+      { en:"My hobby is drawing cartoon characters.", he:"התחביב שלי הוא ציור דמויות קומיקס.",  words:[{en:"hobby",he:"תחביב"},{en:"drawing",he:"ציור"},{en:"cartoon",he:"קומיקס"}] },
+      { en:"We play board games on weekends.",        he:"אנחנו משחקים משחקי קופסה בסופי שבוע.",words:[{en:"board games",he:"משחקי קופסה"},{en:"weekends",he:"סופי שבוע"}] },
+      { en:"I collect stamps from different countries.", he:"אני אוסף בולים ממדינות שונות.",    words:[{en:"collect stamps",he:"אוסף בולים"},{en:"different countries",he:"מדינות שונות"}] },
+      { en:"She likes to paint with watercolors.",    he:"היא אוהבת לצבוע בצבעי מים.",          words:[{en:"likes to paint",he:"אוהבת לצבוע"},{en:"watercolors",he:"צבעי מים"}] },
+      { en:"I build things with clay on weekends.",   he:"אני בונה דברים מחימר בסופי שבוע.",    words:[{en:"build things",he:"בונה דברים"},{en:"clay",he:"חימר"},{en:"weekends",he:"סופי שבוע"}] },
+      { en:"We go fishing by the river on Saturdays.",he:"אנחנו הולכים לדוג ליד הנהר בשבתות.", words:[{en:"go fishing",he:"הולכים לדוג"},{en:"river",he:"נהר"},{en:"Saturdays",he:"שבתות"}] },
+      { en:"I enjoy cooking new recipes at home.",    he:"אני נהנה לבשל מתכונים חדשים בבית.",   words:[{en:"enjoy cooking",he:"נהנה לבשל"},{en:"new recipes",he:"מתכונים חדשים"}] },
+      { en:"She dances every week at the dance studio.", he:"היא רוקדת כל שבוע באולפן ריקוד.", words:[{en:"dances every week",he:"רוקדת כל שבוע"},{en:"dance studio",he:"אולפן ריקוד"}] },
+      { en:"I love solving puzzles in the evening.",  he:"אני אוהב לפתור פאזלים בערב.",          words:[{en:"solving puzzles",he:"לפתור פאזלים"},{en:"evening",he:"ערב"}] },
+      { en:"He learns new magic tricks every week.",  he:"הוא לומד טריקי קסם חדשים כל שבוע.",   words:[{en:"magic tricks",he:"טריקי קסם"},{en:"every week",he:"כל שבוע"}] },
+      { en:"We make friendship bracelets together.",  he:"אנחנו מכינים צמידי ידידות יחד.",       words:[{en:"make",he:"מכינים"},{en:"friendship bracelets",he:"צמידי ידידות"},{en:"together",he:"יחד"}] },
+      { en:"She knits scarves for her family members.",he:"היא סורגת צעיפים לחברי משפחתה.",     words:[{en:"knits",he:"סורגת"},{en:"scarves",he:"צעיפים"},{en:"family members",he:"חברי משפחה"}] },
+      { en:"I enjoy hiking in the mountains.",        he:"אני נהנה לטייל בהרים.",               words:[{en:"enjoy hiking",he:"נהנה לטייל"},{en:"mountains",he:"הרים"}] },
+      { en:"We build model planes and rockets.",      he:"אנחנו בונים מטוסים וטילים מדגמים.",   words:[{en:"build",he:"בונים"},{en:"model planes",he:"מטוסים מדגמים"},{en:"rockets",he:"טילים"}] },
     ],
     intermediate: [
-      { en:"Photography helps me capture beautiful memories.",         he:"צילום עוזר לי ללכוד זיכרונות יפים.",          words:[{en:"Photography",he:"צילום"},{en:"capture",he:"ללכוד"},{en:"memories",he:"זיכרונות"}] },
-      { en:"Playing a musical instrument requires patience and practice.", he:"נגינה על כלי נגינה דורשת סבלנות ותרגול.",    words:[{en:"musical instrument",he:"כלי נגינה"},{en:"patience",he:"סבלנות"},{en:"practice",he:"תרגול"}] },
-      { en:"Gardening is a relaxing hobby that connects us to nature.",  he:"גינון הוא תחביב מרגיע שמחבר אותנו לטבע.",   words:[{en:"Gardening",he:"גינון"},{en:"relaxing",he:"מרגיע"},{en:"nature",he:"טבע"}] },
+      { en:"Photography helps me capture beautiful memories.",          he:"צילום עוזר לי ללכוד זיכרונות יפים.",         words:[{en:"Photography",he:"צילום"},{en:"capture",he:"ללכוד"},{en:"memories",he:"זיכרונות"}] },
+      { en:"Playing a musical instrument requires patience and practice.",he:"נגינה על כלי נגינה דורשת סבלנות ותרגול.",   words:[{en:"musical instrument",he:"כלי נגינה"},{en:"patience",he:"סבלנות"},{en:"practice",he:"תרגול"}] },
+      { en:"Gardening is a relaxing hobby that connects us to nature.",  he:"גינון הוא תחביב מרגיע שמחבר אותנו לטבע.",  words:[{en:"Gardening",he:"גינון"},{en:"relaxing",he:"מרגיע"},{en:"nature",he:"טבע"}] },
+      { en:"She started a YouTube channel to share her cooking videos.", he:"היא פתחה ערוץ יוטיוב לשיתוף סרטוני הבישול שלה.", words:[{en:"started a channel",he:"פתחה ערוץ"},{en:"share",he:"לשתף"},{en:"cooking videos",he:"סרטוני בישול"}] },
+      { en:"I joined a book club to discuss novels every month.",        he:"הצטרפתי למועדון ספרים לדיון ברומנים כל חודש.", words:[{en:"joined a book club",he:"הצטרפתי למועדון ספרים"},{en:"discuss novels",he:"לדיון ברומנים"},{en:"every month",he:"כל חודש"}] },
+      { en:"He taught himself to play the guitar using online lessons.", he:"הוא לימד את עצמו לנגן בגיטרה בעזרת שיעורים מקוונים.", words:[{en:"taught himself",he:"לימד את עצמו"},{en:"guitar",he:"גיטרה"},{en:"online lessons",he:"שיעורים מקוונים"}] },
+      { en:"We created a mural together for the school hallway.",        he:"יצרנו ציורי קיר יחד למסדרון בית הספר.",       words:[{en:"created a mural",he:"יצרנו ציור קיר"},{en:"together",he:"יחד"},{en:"hallway",he:"מסדרון"}] },
+      { en:"She competes in chess tournaments across the country.",      he:"היא מתחרה בטורנירי שחמט ברחבי הארץ.",        words:[{en:"competes",he:"מתחרה"},{en:"chess tournaments",he:"טורנירי שחמט"},{en:"across the country",he:"ברחבי הארץ"}] },
+      { en:"My model train collection fills an entire room.",            he:"אוסף הרכבות המדגמים שלי ממלא חדר שלם.",      words:[{en:"model train",he:"רכבת מדגם"},{en:"collection",he:"אוסף"},{en:"fills an entire room",he:"ממלא חדר שלם"}] },
+      { en:"He writes poetry to express his inner feelings.",            he:"הוא כותב שירה כדי לבטא את רגשותיו הפנימיים.", words:[{en:"writes poetry",he:"כותב שירה"},{en:"express",he:"לבטא"},{en:"inner feelings",he:"רגשות פנימיים"}] },
     ],
     advanced: [
       { en:"Creative hobbies such as writing and painting foster emotional expression.", he:"תחביבים יצירתיים כמו כתיבה וציור מטפחים ביטוי רגשי.", words:[{en:"Creative hobbies",he:"תחביבים יצירתיים"},{en:"foster",he:"מטפחים"},{en:"emotional expression",he:"ביטוי רגשי"}] },
+      { en:"Amateur astronomers contribute valuable data to professional research.",     he:"אסטרונומים חובבים תורמים נתונים יקרי ערך למחקר מקצועי.", words:[{en:"Amateur astronomers",he:"אסטרונומים חובבים"},{en:"contribute",he:"תורמים"},{en:"professional research",he:"מחקר מקצועי"}] },
+      { en:"The therapeutic benefits of art are increasingly recognized by psychologists.", he:"היתרונות הטיפוליים של אמנות מוכרים יותר ויותר על ידי פסיכולוגים.", words:[{en:"therapeutic benefits",he:"יתרונות טיפוליים"},{en:"increasingly",he:"יותר ויותר"},{en:"psychologists",he:"פסיכולוגים"}] },
+      { en:"Competitive gaming has evolved into a legitimate professional career path.", he:"גיימינג תחרותי התפתח לנתיב קריירה מקצועי לגיטימי.", words:[{en:"Competitive gaming",he:"גיימינג תחרותי"},{en:"evolved",he:"התפתח"},{en:"legitimate",he:"לגיטימי"}] },
+      { en:"Mindfulness practices such as meditation reduce stress and improve focus.", he:"תרגולי מיינדפולנס כמו מדיטציה מפחיתים מתח ומשפרים ריכוז.", words:[{en:"Mindfulness",he:"מיינדפולנס"},{en:"meditation",he:"מדיטציה"},{en:"reduce stress",he:"מפחיתים מתח"}] },
     ],
   },
   nature: {
@@ -870,33 +1148,78 @@ const SENTENCES = {
       { en:"Trees are very tall and green.",       he:"עצים גבוהים מאוד וירוקים.",    words:[{en:"Trees",he:"עצים"},{en:"tall",he:"גבוהים"},{en:"green",he:"ירוקים"}] },
       { en:"The river flows through the forest.",  he:"הנהר זורם דרך היער.",          words:[{en:"river",he:"נהר"},{en:"flows",he:"זורם"},{en:"forest",he:"יער"}] },
       { en:"Flowers bloom in the spring.",         he:"פרחים פורחים באביב.",          words:[{en:"Flowers",he:"פרחים"},{en:"bloom",he:"פורחים"},{en:"spring",he:"אביב"}] },
+      { en:"The sun rises in the east.",           he:"השמש עולה במזרח.",             words:[{en:"sun rises",he:"שמש עולה"},{en:"east",he:"מזרח"}] },
+      { en:"Leaves fall from the trees in autumn.",he:"עלים נופלים מהעצים בסתיו.",    words:[{en:"Leaves fall",he:"עלים נופלים"},{en:"trees",he:"עצים"},{en:"autumn",he:"סתיו"}] },
+      { en:"The waterfall makes a loud sound.",    he:"המפל משמיע קול רועש.",          words:[{en:"waterfall",he:"מפל"},{en:"loud sound",he:"קול רועש"}] },
+      { en:"The sea is deep and full of life.",    he:"הים עמוק ומלא חיים.",           words:[{en:"sea",he:"ים"},{en:"deep",he:"עמוק"},{en:"full of life",he:"מלא חיים"}] },
+      { en:"I love walking in the park.",          he:"אני אוהב ללכת בפארק.",          words:[{en:"love walking",he:"אוהב ללכת"},{en:"park",he:"פארק"}] },
+      { en:"The stars shine at night.",            he:"הכוכבים זורחים בלילה.",         words:[{en:"stars shine",he:"כוכבים זורחים"},{en:"at night",he:"בלילה"}] },
+      { en:"The mountain is covered with snow.",   he:"ההר מכוסה בשלג.",              words:[{en:"mountain",he:"הר"},{en:"covered with snow",he:"מכוסה בשלג"}] },
+      { en:"The cave is dark and mysterious.",     he:"המערה אפלה ומסתורית.",          words:[{en:"cave",he:"מערה"},{en:"dark",he:"אפלה"},{en:"mysterious",he:"מסתורית"}] },
+      { en:"We planted seeds in the garden.",      he:"שתלנו זרעים בגינה.",           words:[{en:"planted seeds",he:"שתלנו זרעים"},{en:"garden",he:"גינה"}] },
+      { en:"A rainbow appeared after the rain.",   he:"קשת הופיעה לאחר הגשם.",        words:[{en:"rainbow appeared",he:"קשת הופיעה"},{en:"after the rain",he:"לאחר הגשם"}] },
+      { en:"The wind blows the leaves off the trees.", he:"הרוח מנשבת עלים מהעצים.", words:[{en:"wind blows",he:"רוח מנשבת"},{en:"leaves",he:"עלים"},{en:"trees",he:"עצים"}] },
+      { en:"I love to watch the sunset by the sea.",   he:"אני אוהב לצפות בשקיעה ליד הים.", words:[{en:"watch the sunset",he:"לצפות בשקיעה"},{en:"by the sea",he:"ליד הים"}] },
     ],
     intermediate: [
-      { en:"The desert is hot during the day and cold at night.",    he:"המדבר חם ביום וקר בלילה.",                   words:[{en:"desert",he:"מדבר"},{en:"hot",he:"חם"},{en:"cold at night",he:"קר בלילה"}] },
-      { en:"Forests produce oxygen that all living things need.",    he:"יערות מייצרים חמצן שכל יצור חי צריך.",      words:[{en:"Forests",he:"יערות"},{en:"produce oxygen",he:"מייצרים חמצן"},{en:"living things",he:"יצורים חיים"}] },
+      { en:"The desert is hot during the day and cold at night.", he:"המדבר חם ביום וקר בלילה.",               words:[{en:"desert",he:"מדבר"},{en:"hot",he:"חם"},{en:"cold at night",he:"קר בלילה"}] },
+      { en:"Forests produce oxygen that all living things need.", he:"יערות מייצרים חמצן שכל יצור חי צריך.",   words:[{en:"Forests",he:"יערות"},{en:"produce oxygen",he:"מייצרים חמצן"},{en:"living things",he:"יצורים חיים"}] },
+      { en:"The coral reef is home to thousands of species.",     he:"שונית האלמוגים היא בית לאלפי מינים.",    words:[{en:"coral reef",he:"שונית אלמוגים"},{en:"home to",he:"בית ל"},{en:"species",he:"מינים"}] },
+      { en:"Wildfires can spread rapidly in dry conditions.",     he:"שריפות יכולות להתפשט במהירות בתנאים יבשים.", words:[{en:"Wildfires",he:"שריפות"},{en:"spread rapidly",he:"להתפשט במהירות"},{en:"dry conditions",he:"תנאים יבשים"}] },
+      { en:"The Amazon rainforest is often called the lungs of the earth.", he:"יער הגשם האמזוני נקרא לעיתים קרובות ריאות כדור הארץ.", words:[{en:"Amazon rainforest",he:"יער גשם אמזוני"},{en:"lungs of the earth",he:"ריאות כדור הארץ"}] },
+      { en:"Glaciers are melting at an alarming rate due to global warming.", he:"קרחונים נמסים בקצב מדאיג בגלל התחממות גלובלית.", words:[{en:"Glaciers",he:"קרחונים"},{en:"melting",he:"נמסים"},{en:"global warming",he:"התחממות גלובלית"}] },
+      { en:"Tidal waves are caused by underwater earthquakes or volcanic eruptions.", he:"גלי צונאמי נגרמים מרעידות אדמה תת-ימיות או התפרצויות גרעיניות.", words:[{en:"Tidal waves",he:"גלי צונאמי"},{en:"underwater earthquakes",he:"רעידות אדמה תת-ימיות"},{en:"volcanic eruptions",he:"התפרצויות גרעיניות"}] },
+      { en:"Wetlands serve as natural filters for water purification.",       he:"שטחי ביצה משמשים כמסננים טבעיים לטיהור מים.",             words:[{en:"Wetlands",he:"שטחי ביצה"},{en:"natural filters",he:"מסננים טבעיים"},{en:"water purification",he:"טיהור מים"}] },
+      { en:"Bees play a crucial role in pollinating crops and wild plants.",  he:"דבורים ממלאות תפקיד מכריע בהאבקת גידולים וצמחי בר.",    words:[{en:"Bees",he:"דבורים"},{en:"pollinating",he:"האבקת"},{en:"crops",he:"גידולים"}] },
     ],
     advanced: [
-      { en:"Biodiversity is essential for maintaining healthy ecosystems.",            he:"מגוון ביולוגי חיוני לשמירה על מערכות אקולוגיות בריאות.", words:[{en:"Biodiversity",he:"מגוון ביולוגי"},{en:"ecosystems",he:"מערכות אקולוגיות"}] },
-      { en:"Deforestation threatens wildlife habitats and accelerates climate change.", he:"כריתת יערות מאיימת על בתי גידול ומאיצה שינויי אקלים.",   words:[{en:"Deforestation",he:"כריתת יערות"},{en:"habitats",he:"בתי גידול"},{en:"accelerates",he:"מאיצה"}] },
+      { en:"Biodiversity is essential for maintaining healthy ecosystems.",           he:"מגוון ביולוגי חיוני לשמירה על מערכות אקולוגיות בריאות.",  words:[{en:"Biodiversity",he:"מגוון ביולוגי"},{en:"ecosystems",he:"מערכות אקולוגיות"}] },
+      { en:"Deforestation threatens wildlife habitats and accelerates climate change.",he:"כריתת יערות מאיימת על בתי גידול ומאיצה שינויי אקלים.",   words:[{en:"Deforestation",he:"כריתת יערות"},{en:"habitats",he:"בתי גידול"},{en:"accelerates",he:"מאיצה"}] },
+      { en:"Rewilding projects aim to restore natural ecosystems to their former state.", he:"פרויקטי שיקום מטרתם לשחזר מערכות אקולוגיות טבעיות למצבן הקודם.", words:[{en:"Rewilding",he:"שיקום"},{en:"restore",he:"לשחזר"},{en:"former state",he:"מצב קודם"}] },
+      { en:"Soil degradation reduces agricultural productivity and threatens food security.", he:"שחיקת קרקע מפחיתה פריון חקלאי ומאיימת על ביטחון מזון.", words:[{en:"Soil degradation",he:"שחיקת קרקע"},{en:"agricultural productivity",he:"פריון חקלאי"},{en:"food security",he:"ביטחון מזון"}] },
+      { en:"The nitrogen cycle is fundamental to all living systems on Earth.",        he:"מחזור החנקן הוא יסודי לכל המערכות החיות על פני כדור הארץ.", words:[{en:"nitrogen cycle",he:"מחזור חנקן"},{en:"fundamental",he:"יסודי"},{en:"living systems",he:"מערכות חיות"}] },
     ],
   },
   feelings: {
     beginner: [
-      { en:"I feel happy today.",                            he:"אני מרגיש שמח היום.",                  words:[{en:"feel happy",he:"מרגיש שמח"},{en:"today",he:"היום"}] },
-      { en:"She is sad because she lost her toy.",           he:"היא עצובה כי איבדה את הצעצוע.",        words:[{en:"sad",he:"עצובה"},{en:"lost",he:"איבדה"},{en:"toy",he:"צעצוע"}] },
-      { en:"I am excited about the birthday party.",         he:"אני מתרגש מהמסיבת יום הולדת.",         words:[{en:"excited",he:"מתרגש"},{en:"birthday party",he:"מסיבת יום הולדת"}] },
+      { en:"I feel happy today.",                         he:"אני מרגיש שמח היום.",                words:[{en:"feel happy",he:"מרגיש שמח"},{en:"today",he:"היום"}] },
+      { en:"She is sad because she lost her toy.",        he:"היא עצובה כי איבדה את הצעצוע.",     words:[{en:"sad",he:"עצובה"},{en:"lost",he:"איבדה"},{en:"toy",he:"צעצוע"}] },
+      { en:"I am excited about the birthday party.",      he:"אני מתרגש מהמסיבת יום הולדת.",      words:[{en:"excited",he:"מתרגש"},{en:"birthday party",he:"מסיבת יום הולדת"}] },
+      { en:"He feels tired after a long day.",            he:"הוא מרגיש עייף אחרי יום ארוך.",     words:[{en:"feels tired",he:"מרגיש עייף"},{en:"long day",he:"יום ארוך"}] },
+      { en:"I am proud of my drawing.",                   he:"אני גאה בציור שלי.",                words:[{en:"proud",he:"גאה"},{en:"drawing",he:"ציור"}] },
+      { en:"She feels lonely without her friends.",       he:"היא מרגישה בודדה בלי חברות שלה.",   words:[{en:"lonely",he:"בודדה"},{en:"without her friends",he:"בלי חברותיה"}] },
+      { en:"I feel brave when I try something new.",      he:"אני מרגיש אמיץ כשאני מנסה משהו חדש.",words:[{en:"brave",he:"אמיץ"},{en:"try something new",he:"מנסה משהו חדש"}] },
+      { en:"He is angry because someone took his pencil.",he:"הוא כועס כי מישהו לקח את עיפרונו.", words:[{en:"angry",he:"כועס"},{en:"took his pencil",he:"לקח עיפרונו"}] },
+      { en:"I feel calm when I listen to music.",         he:"אני מרגיש רגוע כשאני מקשיב למוזיקה.",words:[{en:"calm",he:"רגוע"},{en:"listen to music",he:"מקשיב למוזיקה"}] },
+      { en:"She feels surprised by the gift.",            he:"היא מרגישה מופתעת מהמתנה.",          words:[{en:"surprised",he:"מופתעת"},{en:"gift",he:"מתנה"}] },
+      { en:"I feel shy when I meet new people.",          he:"אני מרגיש ביישן כשאני פוגש אנשים חדשים.",words:[{en:"shy",he:"ביישן"},{en:"meet new people",he:"פוגש אנשים חדשים"}] },
+      { en:"She felt grateful for the kind help.",        he:"היא הרגישה אסירת תודה על הסיוע הנחמד.",words:[{en:"grateful",he:"אסירת תודה"},{en:"kind help",he:"סיוע נחמד"}] },
+      { en:"I feel scared of the dark.",                  he:"אני מפחד מהחושך.",                   words:[{en:"scared",he:"מפחד"},{en:"dark",he:"חושך"}] },
+      { en:"He feels hopeful about the future.",          he:"הוא מרגיש מלא תקווה לגבי העתיד.",    words:[{en:"hopeful",he:"מלא תקווה"},{en:"future",he:"עתיד"}] },
+      { en:"We feel joyful when we are all together.",    he:"אנחנו מרגישים שמחה כשאנחנו כולנו יחד.",words:[{en:"joyful",he:"שמחה"},{en:"all together",he:"כולנו יחד"}] },
     ],
     intermediate: [
-      { en:"I feel nervous before important exams.",         he:"אני מרגיש עצבני לפני מבחנים חשובים.",  words:[{en:"nervous",he:"עצבני"},{en:"important exams",he:"מבחנים חשובים"}] },
-      { en:"Sharing your feelings helps you feel better.",   he:"שיתוף הרגשות שלך עוזר לך להרגיש טוב יותר.", words:[{en:"Sharing",he:"שיתוף"},{en:"feelings",he:"רגשות"},{en:"feel better",he:"להרגיש טוב יותר"}] },
+      { en:"I feel nervous before important exams.",          he:"אני מרגיש עצבני לפני מבחנים חשובים.",     words:[{en:"nervous",he:"עצבני"},{en:"important exams",he:"מבחנים חשובים"}] },
+      { en:"Sharing your feelings helps you feel better.",    he:"שיתוף הרגשות שלך עוזר לך להרגיש טוב יותר.", words:[{en:"Sharing",he:"שיתוף"},{en:"feelings",he:"רגשות"},{en:"feel better",he:"להרגיש טוב יותר"}] },
       { en:"Music can change your mood in just a few seconds.", he:"מוזיקה יכולה לשנות את מצב רוחך תוך שניות.", words:[{en:"Music",he:"מוזיקה"},{en:"mood",he:"מצב רוח"},{en:"seconds",he:"שניות"}] },
+      { en:"She felt overwhelmed by the amount of homework.",   he:"היא הרגישה מוצפת מכמות שיעורי הבית.",     words:[{en:"overwhelmed",he:"מוצפת"},{en:"amount of homework",he:"כמות שיעורי הבית"}] },
+      { en:"He felt embarrassed when he forgot his lines.",     he:"הוא הרגיש נבוך כשהוא שכח את השורות שלו.", words:[{en:"embarrassed",he:"נבוך"},{en:"forgot",he:"שכח"},{en:"lines",he:"שורות"}] },
+      { en:"We felt relieved when the test was over.",          he:"הרגשנו הקלה כשהמבחן הסתיים.",             words:[{en:"relieved",he:"הקלה"},{en:"test was over",he:"המבחן הסתיים"}] },
+      { en:"She was touched by her friend's kind words.",       he:"היא נגעה ללבה על ידי מילות הידיד שלה.",   words:[{en:"touched",he:"נגעה ללבה"},{en:"kind words",he:"מילות חיבה"}] },
+      { en:"I feel frustrated when I can't solve a problem.",   he:"אני מרגיש מתוסכל כשאני לא יכול לפתור בעיה.", words:[{en:"frustrated",he:"מתוסכל"},{en:"solve a problem",he:"לפתור בעיה"}] },
+      { en:"He felt inspired after watching the documentary.",  he:"הוא הרגיש מעורר השראה לאחר שצפה בסרט התיעודי.",words:[{en:"inspired",he:"מעורר השראה"},{en:"documentary",he:"סרט תיעודי"}] },
+      { en:"She was jealous of her brother's new bicycle.",     he:"היא קינאה באופניים החדשים של אחיה.",       words:[{en:"jealous",he:"מקנאת"},{en:"brother's bicycle",he:"האופניים של אחיה"}] },
     ],
     advanced: [
       { en:"Emotional intelligence involves understanding and managing your own emotions effectively.", he:"אינטליגנציה רגשית כוללת הבנה וניהול יעיל של רגשותיך.", words:[{en:"Emotional intelligence",he:"אינטליגנציה רגשית"},{en:"managing",he:"ניהול"},{en:"effectively",he:"ביעילות"}] },
       { en:"Practicing gratitude daily has been shown to improve mental well-being.",               he:"תרגול כפיות טובה יומי הוכח כמשפר את הרווחה הנפשית.",  words:[{en:"gratitude",he:"כפיות טובה"},{en:"improve",he:"לשפר"},{en:"well-being",he:"רווחה"}] },
+      { en:"Cognitive behavioral therapy helps people reframe negative thought patterns.",           he:"טיפול קוגניטיבי-התנהגותי עוזר לאנשים לשנות דפוסי חשיבה שליליים.", words:[{en:"Cognitive behavioral therapy",he:"טיפול קוגניטיבי-התנהגותי"},{en:"reframe",he:"לשנות"},{en:"negative thought patterns",he:"דפוסי חשיבה שליליים"}] },
+      { en:"Empathy allows us to understand and share the feelings of others.",                     he:"אמפתיה מאפשרת לנו להבין ולשתף ברגשותיהם של אחרים.",     words:[{en:"Empathy",he:"אמפתיה"},{en:"understand",he:"להבין"},{en:"share the feelings",he:"לשתף ברגשות"}] },
+      { en:"Suppressing emotions over time can lead to increased anxiety and stress.",               he:"דיכוי רגשות לאורך זמן יכול להוביל לחרדה ומתח מוגברים.", words:[{en:"Suppressing emotions",he:"דיכוי רגשות"},{en:"anxiety",he:"חרדה"},{en:"stress",he:"מתח"}] },
     ],
   },
 };
+
 
 /* ==========================================================
    SCORING CONFIG PER DIFFICULTY
@@ -946,7 +1269,7 @@ function init() {
       const d = JSON.parse(saved);
       state.totalStars   = d.totalStars   || 0;
       state.usedSentences= d.usedSentences|| {};
-      state.topic        = d.lastTopic    || "animals";
+      state.topic        = d.lastTopic    || "random";
       state.difficulty   = d.lastDifficulty || "beginner";
       state.mode         = d.lastMode     || "en";
       state.ownedCards   = d.ownedCards   || [];
@@ -1043,7 +1366,21 @@ function getNextSentence(topic, difficulty) {
 }
 
 function createSentence() {
-  state.topic = document.getElementById("topic-select").value;
+  const selectedTopic = document.getElementById("topic-select").value;
+  const allTopics = Object.keys(SENTENCES);
+
+  // If random – pick a topic we haven't recently used (rotate)
+  if (selectedTopic === "random") {
+    const key = `_random_${state.difficulty}`;
+    if (!state.usedSentences[key]) state.usedSentences[key] = [];
+    if (state.usedSentences[key].length >= allTopics.length)
+      state.usedSentences[key] = [];
+    const available = allTopics.filter(t => !state.usedSentences[key].includes(t));
+    state.topic = available[Math.floor(Math.random() * available.length)];
+    state.usedSentences[key].push(state.topic);
+  } else {
+    state.topic = selectedTopic;
+  }
 
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     showSettingsError("⚠️ הדפדפן אינו תומך בזיהוי דיבור. נסה Google Chrome.");
@@ -1492,26 +1829,61 @@ function renderShop() {
   }
 }
 
+let _pendingPurchaseIndex = -1;
+
 function purchaseCard(index) {
-  const price = CARD_PRICES[index];
   if (state.ownedCards.includes(index)) { openViewer(index); return; }
+  // Show confirm modal
+  const price = CARD_PRICES[index];
+  _pendingPurchaseIndex = index;
+
+  const previewImg = document.getElementById("modal-preview-img");
+  const noImg      = document.getElementById("modal-no-img");
+  previewImg.style.display = "block";
+  noImg.style.display = "none";
+  previewImg.src = `image${index}.jpeg`;
+
+  document.getElementById("modal-title").textContent   = `קלף מספר ${index + 1}`;
+  document.getElementById("modal-price").textContent   = `⭐ ${price} נקודות`;
+
+  const balanceEl = document.getElementById("modal-balance");
+  const after = state.totalStars - price;
+  if (state.totalStars >= price) {
+    balanceEl.textContent = `יתרה לאחר הרכישה: ${after} נקודות`;
+    balanceEl.className = "modal-balance";
+    document.getElementById("modal-btn-buy").disabled = false;
+  } else {
+    balanceEl.textContent = `אין מספיק נקודות (יש לך ${state.totalStars})`;
+    balanceEl.className = "modal-balance cant-afford";
+    document.getElementById("modal-btn-buy").disabled = true;
+  }
+
+  document.getElementById("purchase-modal").classList.add("open");
+}
+
+function closeModal() {
+  document.getElementById("purchase-modal").classList.remove("open");
+  _pendingPurchaseIndex = -1;
+}
+
+function confirmPurchase() {
+  const index = _pendingPurchaseIndex;
+  if (index < 0) return;
+  const price = CARD_PRICES[index];
   if (state.totalStars < price) return;
 
   state.totalStars -= price;
   state.ownedCards.push(index);
   saveData();
   updateTotalStarsDisplay();
+  closeModal();
 
-  // Flash animation on slot, then re-render
+  renderShop();
+
+  // Flash then open viewer
   const slot = document.getElementById(`card-slot-${index}`);
-  if (slot) {
-    slot.classList.add("just-bought");
-    setTimeout(() => {
-      renderShop();
-      // Auto-open viewer after purchase
-      openViewer(index);
-    }, 500);
-  }
+  if (slot) slot.classList.add("just-bought");
+  setTimeout(() => openViewer(index), 520);
 }
 
 function openViewer(index) {
