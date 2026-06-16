@@ -579,6 +579,59 @@
   }
   .modal-btn-cancel:hover { border-color: var(--text-muted); color: var(--text); }
 
+  /* ===== TYPING INPUT ===== */
+  .type-input-wrap {
+    width: 100%; position: relative;
+  }
+  .type-input {
+    width: 100%; padding: 14px 52px 14px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    color: var(--text); font-size: 1rem; font-family: var(--font);
+    transition: border-color .2s, background .2s;
+    resize: none; outline: none;
+  }
+  .type-input:focus { border-color: var(--teal-light); background: rgba(13,148,136,0.08); }
+  .type-input.mode-he:focus { border-color: var(--orange-light); background: rgba(249,115,22,0.08); }
+  .type-input::placeholder { color: var(--text-muted); }
+  .type-submit-btn {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: linear-gradient(135deg, var(--teal), var(--teal-light));
+    color: #fff; font-size: 1.1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .18s; box-shadow: 0 2px 10px rgba(13,148,136,0.4);
+  }
+  .type-submit-btn.mode-he {
+    background: linear-gradient(135deg, var(--orange), var(--orange-light));
+    box-shadow: 0 2px 10px rgba(249,115,22,0.4);
+  }
+  .type-submit-btn:hover { transform: translateY(-50%) scale(1.1); }
+  .type-submit-btn:active { transform: translateY(-50%) scale(0.95); }
+
+  /* Input method toggle */
+  .input-toggle {
+    display: flex; gap: 0; width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm); overflow: hidden;
+  }
+  .input-toggle-btn {
+    flex: 1; padding: 9px 8px; border: none; background: transparent;
+    color: var(--text-muted); font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; font-family: var(--font); transition: all .18s;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .input-toggle-btn.active-en {
+    background: linear-gradient(135deg, rgba(13,148,136,0.3), rgba(153,246,228,0.1));
+    color: var(--teal-light);
+  }
+  .input-toggle-btn.active-he {
+    background: linear-gradient(135deg, rgba(249,115,22,0.3), rgba(254,215,170,0.1));
+    color: var(--orange-light);
+  }
+
   @media (max-width: 400px) { .sentence-main { font-size: 1.2rem; } .btn-mic { font-size: 1.1rem; padding: 18px; } }
 </style>
 </head>
@@ -676,14 +729,32 @@
       <div class="stars-row" id="sentence-stars"></div>
     </div>
 
-    <div style="width:100%">
-      <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
-      <div class="progress-label" id="progress-label">לחץ על הכפתור והתחל לדבר</div>
+    <!-- Input method toggle -->
+    <div class="input-toggle" id="input-toggle">
+      <button class="input-toggle-btn" id="toggle-mic" onclick="setInputMethod('mic')">🎤 דיבור</button>
+      <button class="input-toggle-btn" id="toggle-type" onclick="setInputMethod('type')">⌨️ הקלדה</button>
     </div>
 
-    <button class="btn btn-mic" id="btn-mic" onclick="toggleListening()">
-      🎤 דבר עכשיו
-    </button>
+    <!-- MIC mode -->
+    <div id="mic-section">
+      <button class="btn btn-mic" id="btn-mic" onclick="toggleListening()">
+        🎤 דבר עכשיו
+      </button>
+      <div style="width:100%">
+        <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="progress-label" id="progress-label">לחץ על הכפתור והתחל לדבר</div>
+      </div>
+    </div>
+
+    <!-- TYPE mode -->
+    <div id="type-section" style="display:none; width:100%;">
+      <div class="type-input-wrap">
+        <textarea class="type-input" id="type-input" rows="2"
+          placeholder="הקלד את התרגום כאן..."
+          onkeydown="handleTypeKey(event)"></textarea>
+        <button class="type-submit-btn" id="type-submit-btn" onclick="submitTyped()">↵</button>
+      </div>
+    </div>
 
     <div class="btn-row">
       <button class="btn btn-secondary" id="btn-hint" onclick="showHint()">💡 רמז</button>
@@ -1253,6 +1324,7 @@ let state = {
   totalStars: 0,
   usedSentences: {},
   ownedCards: [],
+  inputMethod: "mic",  // "mic" | "type"
   recognition: null,
   isListening: false,
   progressTimer: null,
@@ -1382,10 +1454,6 @@ function createSentence() {
     state.topic = selectedTopic;
   }
 
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    showSettingsError("⚠️ הדפדפן אינו תומך בזיהוי דיבור. נסה Google Chrome.");
-    return;
-  }
   const sentence = getNextSentence(state.topic, state.difficulty);
   if (!sentence) { showSettingsError("⚠️ לא נמצאו משפטים לנושא ורמה זו."); return; }
   hideSettingsError();
@@ -1446,6 +1514,17 @@ function createSentence() {
   document.getElementById("progress-label").textContent = isEN
     ? "לחץ ותרגם לאנגלית בקול"
     : "לחץ ותרגם לעברית בקול";
+
+  // Reset typing input
+  const typeInput = document.getElementById("type-input");
+  typeInput.value = "";
+  typeInput.className = "type-input" + (isEN ? "" : " mode-he");
+  typeInput.placeholder = isEN ? "Type your English translation here..." : "הקלד את התרגום העברי כאן...";
+  typeInput.dir = isEN ? "ltr" : "rtl";
+  document.getElementById("type-submit-btn").className = "type-submit-btn" + (isEN ? "" : " mode-he");
+
+  // Apply current input method toggle UI (keep user's preference)
+  setInputMethod(state.inputMethod || "mic", true);
 
   updateScoreUI();
   updateAttemptInfo();
@@ -1908,6 +1987,106 @@ function closeViewer() {
     renderShop(); // refresh grid in case we came from purchase
   }, { once: true });
 }
+
+/* ==========================================================
+   INPUT METHOD TOGGLE  (mic ↔ type)
+   ========================================================== */
+function setInputMethod(method, silent) {
+  state.inputMethod = method;
+  const isEN = state.mode === "en";
+
+  const micSection  = document.getElementById("mic-section");
+  const typeSection = document.getElementById("type-section");
+  const btnMic      = document.getElementById("toggle-mic");
+  const btnType     = document.getElementById("toggle-type");
+  const activeClass = isEN ? "active-en" : "active-he";
+
+  if (method === "mic") {
+    micSection.style.display  = "";
+    typeSection.style.display = "none";
+    btnMic.className  = "input-toggle-btn " + activeClass;
+    btnType.className = "input-toggle-btn";
+    if (state.sentenceDone) {
+      document.getElementById("btn-mic").disabled = true;
+    }
+  } else {
+    micSection.style.display  = "none";
+    typeSection.style.display = "";
+    btnMic.className  = "input-toggle-btn";
+    btnType.className = "input-toggle-btn " + activeClass;
+    if (!state.sentenceDone && !silent) {
+      setTimeout(() => document.getElementById("type-input").focus(), 80);
+    }
+    stopListening();
+  }
+}
+
+function handleTypeKey(e) {
+  // Enter (without shift) submits
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    submitTyped();
+  }
+}
+
+function submitTyped() {
+  if (state.sentenceDone) return;
+  const input = document.getElementById("type-input");
+  const text  = input.value.trim();
+  if (!text) return;
+
+  // Count as an attempt
+  state.attemptCount++;
+  if (state.attemptCount > 2) deductPoints(true);
+  updateAttemptInfo();
+
+  // Show in transcript area
+  const transcript = document.getElementById("transcript-area");
+  transcript.textContent = text;
+  transcript.classList.remove("empty");
+
+  evaluateSpeech(text);
+
+  // Clear input only on failure so user can refine
+  // (on success createSentence clears it automatically)
+}
+
+/* ==========================================================
+   SWIPE TO CHANGE TABS
+   ========================================================== */
+(function initSwipe() {
+  const MODES = ["en", "he", "shop"];
+  let touchStartX = 0, touchStartY = 0;
+
+  document.addEventListener("touchstart", e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener("touchend", e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+
+    // Only horizontal swipe with enough distance and not mostly vertical
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
+
+    // Don't fire if touch started on an interactive element
+    const target = e.target;
+    if (target.closest("button, select, input, textarea, .card-slot, .modal-overlay, .card-viewer")) return;
+
+    const currentIdx = MODES.indexOf(state.mode);
+    let newIdx;
+    // RTL: swipe right = previous tab (index - 1), swipe left = next tab (index + 1)
+    if (dx > 0) {
+      newIdx = currentIdx - 1; // right swipe → previous
+    } else {
+      newIdx = currentIdx + 1; // left swipe  → next
+    }
+
+    if (newIdx < 0 || newIdx >= MODES.length) return;
+    switchMode(MODES[newIdx]);
+  }, { passive: true });
+})();
 
 document.addEventListener("DOMContentLoaded", init);
 </script>
