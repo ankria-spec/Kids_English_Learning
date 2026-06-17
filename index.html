@@ -1665,14 +1665,14 @@ function startListening() {
   const bar = document.getElementById("progress-bar");
   const label = document.getElementById("progress-label");
   bar.style.width = "0%";
-  label.textContent = "⏱️ 5 שניות...";
+  label.textContent = "⏱️ 6 שניות...";
 
   state.progressTimer = setInterval(() => {
     elapsed += 100;
-    bar.style.width = Math.min((elapsed/5000)*100, 100) + "%";
-    const rem = Math.max(0, Math.ceil((5000-elapsed)/1000));
+    bar.style.width = Math.min((elapsed/6000)*100, 100) + "%";
+    const rem = Math.max(0, Math.ceil((6000-elapsed)/1000));
     label.textContent = rem > 0 ? `⏱️ ${rem} שניות...` : "⏹️ מעבד...";
-    if (elapsed >= 5000) {
+    if (elapsed >= 6000) {
       clearInterval(state.progressTimer);
       if (state.isListening && state.recognition) state.recognition.stop();
     }
@@ -1765,7 +1765,7 @@ function evaluateSpeech(transcript) {
 
   const feedback = document.getElementById("feedback-area");
 
-  if (sim >= 0.75) {
+  if (sim >= 0.65) {
     state.sentenceDone = true;
     state.totalStars += state.currentPoints;
     saveData();
@@ -1853,6 +1853,8 @@ function launchConfetti() {
 const TOTAL_CARDS = 8;
 // Card prices: card 0 is cheapest, card 7 most expensive
 const CARD_PRICES = [5, 8, 12, 20, 30, 40, 50, 70];
+// Image files are named image1.jpeg .. image8.jpeg (1-indexed)
+function cardImageSrc(i) { return `image${i + 1}.jpeg`; }
 
 function renderShop() {
   // Update balance display
@@ -1876,7 +1878,7 @@ function renderShop() {
       slot.className = "card-slot owned";
       slot.onclick = () => openViewer(i);
       const img = document.createElement("img");
-      img.src = `image${i}.jpeg`;
+      img.src = cardImageSrc(i);
       img.alt = `קלף ${i+1}`;
       img.onerror = () => { img.style.display="none"; slot.innerHTML += `<span style="font-size:2rem">🃏</span><div style="font-size:0.7rem;color:var(--text-muted);margin-top:6px">קלף ${i+1}</div>`; };
       slot.appendChild(img);
@@ -1885,7 +1887,7 @@ function renderShop() {
       slot.className = "card-slot for-sale";
       slot.onclick = () => purchaseCard(i);
       slot.innerHTML = `
-        <img src="image${i}.jpeg" alt="קלף ${i+1}" style="filter:blur(8px) brightness(0.4)"
+        <img src="${cardImageSrc(i)}" alt="קלף ${i+1}" style="filter:blur(8px) brightness(0.4)"
              onerror="this.style.display='none';this.parentElement.querySelector('.lock-icon').style.opacity='0.6'">
         <div class="lock-icon" style="position:absolute">🔓</div>
         <div class="buy-overlay">
@@ -1897,7 +1899,7 @@ function renderShop() {
       // Locked – not enough points
       slot.className = "card-slot locked";
       slot.innerHTML = `
-        <img src="image${i}.jpeg" alt="קלף ${i+1}" style="filter:blur(10px) brightness(0.25)"
+        <img src="${cardImageSrc(i)}" alt="קלף ${i+1}" style="filter:blur(10px) brightness(0.25)"
              onerror="this.style.display='none'">
         <div class="lock-icon" style="position:absolute">🔒</div>
         <div class="card-price">⭐ ${price}</div>
@@ -1920,7 +1922,7 @@ function purchaseCard(index) {
   const noImg      = document.getElementById("modal-no-img");
   previewImg.style.display = "block";
   noImg.style.display = "none";
-  previewImg.src = `image${index}.jpeg`;
+  previewImg.src = cardImageSrc(index);
 
   document.getElementById("modal-title").textContent   = `קלף מספר ${index + 1}`;
   document.getElementById("modal-price").textContent   = `⭐ ${price} נקודות`;
@@ -1968,7 +1970,7 @@ function confirmPurchase() {
 function openViewer(index) {
   const viewer = document.getElementById("card-viewer");
   const img    = document.getElementById("viewer-img");
-  img.src = `image${index}.jpeg`;
+  img.src = cardImageSrc(index);
   img.className = "";
   viewer.classList.add("open");
   // Flip-in animation
